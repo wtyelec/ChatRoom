@@ -17,7 +17,6 @@ using namespace std;
 void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
-void input_chat_num();
 void input_chat_name();
 void read_ip();
 
@@ -39,8 +38,6 @@ int main()
     memset(buf_send,0,sizeof(buf_send));
     read_ip();
     client_socket();	 
-    //recv(sClient,buf_recv,sizeof(buf_recv),0);   
-    //input_chat_num();
     input_chat_name();
     
     while(1)
@@ -65,30 +62,24 @@ void client_socket()
     sClient = socket(AF_INET,SOCK_STREAM,0);	
     connect(sClient,(struct sockaddr *)&ser,sizeof(ser));
 }
-// 输入聊天人数,发送到服务器
-void input_chat_num()
-{
-    int chat_num;
-
-    if(strcmp(buf_recv,"chat number") == 0)
-    {
-        cout << "input chat number" << endl;
-        while(chat_num <= 0)
-        {
-            cin >> chat_num;
-        }
-        char num[10];
-        sprintf(num,"%d",chat_num);
-        send(sClient,num,sizeof(num),0);
-    }
-}
 // 输入client用户名,发送到服务器
 void input_chat_name()
 {
     char name[10];
 
     cout << "input name" << endl;
-    cin >> name;
+    while(cin >> name)
+    {
+        if(strlen(name) < 10)
+        {
+            break;
+        }
+        else 
+        {
+            cout << "name too long,input again" << endl;
+            continue;
+        }
+    }
     send(sClient,name,sizeof(name),0); 
 }
 // 线程1:接受服务器发来消息
@@ -136,7 +127,7 @@ void *input_msg(void *arg)
     pthread_cancel(thread[0]);
     pthread_exit((void *)1);
 }
-
+// 从配置文件读取ip
 void read_ip()
 {
     ifstream fin("config.txt");  

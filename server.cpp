@@ -44,24 +44,12 @@ int main()
         {
             pthread_create(&thread[i], NULL, thrd_send, (void *)i);
         }
-        /*
-           if((pthread_join(thread[0],&tret) == 0))
-           {
-           continue;
-           }
-           */
         if((pthread_join(tid_apt[chat_num],&tret) == 0))
         {
             continue;
         }
-	}
-	shutdown(sListen,2);
-    /*
-    for(int i = 0; i < chat_num; ++i)
-    {
-        shutdown(Accepts[i],2);
     }
-    */
+	shutdown(sListen,2);
     return 0;
 }
 // socket通信
@@ -74,32 +62,12 @@ void server_socket()
     bind(sListen,(struct sockaddr*)&ser,sizeof(ser));
     listen(sListen,5);
     iLen = sizeof(cli);
-    // 与第一个连接的client确定聊天室人数
-    
-    //char num[10];
+    //等待首个client连接
     Accepts[0] = accept(sListen,(struct sockaddr *)&cli,&iLen);
     printf("port:[%d]\n",ntohs(cli.sin_port));
     recv(Accepts[0],name_data[0],sizeof(name_data),0);
     chat_name[0] = name_data[0];
     chat_num ++;
-    //send(Accepts[0],"chat number",sizeof("chat number"),0);
-    //recv(Accepts[0],num,sizeof(num),0);
-    //chat_num = atoi(num); 
-    //cout << "connect number: " << chat_num << endl;
-    /*  
-    for(int i = 0; i < chat_num; ++i)
-    {
-        if(i != 0)
-        {
-            Accepts[i] = accept(sListen,(struct sockaddr *)&cli,&iLen);
-            printf("port:[%d]\n",ntohs(cli.sin_port));
-            send(Accepts[i],"client",sizeof("client"),0);
-        }
-        // 接受client用户名存入name_data
-        recv(Accepts[i],name_data[i],sizeof(name_data),0);
-        chat_name[i] = name_data[i];
-    }
-    */
 }
 // 线程1:发送消息给其他客户端
 void *thrd_send(void *arg)
@@ -122,7 +90,6 @@ void *thrd_send(void *arg)
         }
     }
     pthread_cancel(tid_apt[chat_num]);
-
     pthread_exit((void *)0);
 }
 // 线程2:监听客户端连接请求
@@ -140,13 +107,3 @@ void *accept_client(void *arg)
     }
     chat_num ++;
 }
-
-
-
-
-
-
-
-
-
-
