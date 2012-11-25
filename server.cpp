@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <vector>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -22,7 +23,7 @@ char        buf_recv[RECV_BUF_SIZE];
 int         sListen(0);
 int         chat_num(0);
 void        *tret;
-int         Accepts[10] = {0};    
+vector<int> Accepts;
 pthread_t   thread[5] = {0};
 pthread_t   tid_apt[5] = {0};
 socklen_t   iLen(0);						
@@ -63,9 +64,10 @@ void server_socket()
     listen(sListen,5);
     iLen = sizeof(cli);
     //等待首个client连接
-    Accepts[0] = accept(sListen,(struct sockaddr *)&cli,&iLen);
+    Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
     printf("port:[%d]\n",ntohs(cli.sin_port));
     recv(Accepts[0],name_data[0],sizeof(name_data),0);
+    cout << "accept name end" << endl;
     chat_name[0] = name_data[0];
     chat_num ++;
 }
@@ -95,7 +97,7 @@ void *thrd_send(void *arg)
 // 线程2:监听客户端连接请求
 void *accept_client(void *arg)
 {
-    Accepts[chat_num] = accept(sListen,(struct sockaddr *)&cli,&iLen);
+    Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
     printf("port:[%d]\n",ntohs(cli.sin_port));
     // 接受client用户名存入name_data
     recv(Accepts[chat_num],name_data[chat_num],sizeof(name_data),0);
