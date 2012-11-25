@@ -29,7 +29,7 @@ pthread_t           tid_apt = 0;
 vector<int>         Accepts;
 vector<pthread_t>   thread;
 map<int,char*>      chat_name;
-char                name_data[10][10];
+char                name_data[1][10];
 
 struct sockaddr_in ser,cli;		
 
