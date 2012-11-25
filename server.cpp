@@ -19,17 +19,17 @@ void *thrd_send(void *arg);
 void *accept_client(void *arg);
 void server_socket();
 
-char        buf_recv[RECV_BUF_SIZE];
-int         sListen(0);
-int         chat_num(0);
-void        *tret;
-vector<int> Accepts;
-pthread_t   thread[5] = {0};
-pthread_t   tid_apt[5] = {0};
-socklen_t   iLen(0);						
+char    buf_recv[RECV_BUF_SIZE];
+int     sListen(0);
+int     chat_num(0);
+void    *tret;
 
-map<int,char*>  chat_name;
-char            name_data[10][10];
+socklen_t           iLen(0);						
+pthread_t           tid_apt = 0;
+vector<int>         Accepts;
+vector<pthread_t>   thread;
+map<int,char*>      chat_name;
+char                name_data[10][10];
 
 struct sockaddr_in ser,cli;		
 
@@ -40,12 +40,12 @@ int main()
 
     while(1)
     {
-        pthread_create(&tid_apt[chat_num], NULL, accept_client, (void *)chat_num);
+        pthread_create(&tid_apt, NULL, accept_client, (void *)chat_num);
         for(int i = 0; i < chat_num; ++i)
         {
             pthread_create(&thread[i], NULL, thrd_send, (void *)i);
         }
-        if((pthread_join(tid_apt[chat_num],&tret) == 0))
+        if((pthread_join(tid_apt,&tret) == 0))
         {
             continue;
         }
@@ -67,9 +67,9 @@ void server_socket()
     Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
     printf("port:[%d]\n",ntohs(cli.sin_port));
     recv(Accepts[0],name_data[0],sizeof(name_data),0);
-    cout << "accept name end" << endl;
     chat_name[0] = name_data[0];
     chat_num ++;
+    thread.push_back(0);
 }
 // 线程1:发送消息给其他客户端
 void *thrd_send(void *arg)
@@ -91,7 +91,7 @@ void *thrd_send(void *arg)
             pthread_cancel(thread[i]);
         }
     }
-    pthread_cancel(tid_apt[chat_num]);
+    pthread_cancel(tid_apt);
     pthread_exit((void *)0);
 }
 // 线程2:监听客户端连接请求
@@ -108,4 +108,5 @@ void *accept_client(void *arg)
         pthread_cancel(thread[i]);
     }
     chat_num ++;
+    thread.push_back(0);
 }
