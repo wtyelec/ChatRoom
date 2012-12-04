@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <ifaddrs.h>
+#include <netinet/in.h>
 #include <fstream>
 
 using namespace std;
@@ -18,6 +20,7 @@ void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
 void input_chat_name();
+void get_ip();
 void read_ip();
 
 int         sClient;
@@ -27,7 +30,7 @@ void        *tret;
 time_t      start,end;
 double      dif(2);
 bool        flag_time(false);
-char        ip[15];   
+char        addrs_buf[15];
 pthread_t   thread[2] = {0};
 
 struct  sockaddr_in ser;
@@ -36,7 +39,7 @@ int main()
 {
     memset(buf_recv,0,sizeof(buf_recv));
     memset(buf_send,0,sizeof(buf_send));
-    read_ip();
+    get_ip();
     client_socket();	 
     input_chat_name();
     
@@ -58,7 +61,7 @@ void client_socket()
 {
     ser.sin_family = AF_INET;
     ser.sin_port = htons(6666);
-    ser.sin_addr.s_addr = inet_addr(ip);//"192.168.86.137");
+    ser.sin_addr.s_addr = inet_addr(addrs_buf);//"192.168.86.137");
     sClient = socket(AF_INET,SOCK_STREAM,0);	
     connect(sClient,(struct sockaddr *)&ser,sizeof(ser));
 }
@@ -127,10 +130,33 @@ void *input_msg(void *arg)
     pthread_cancel(thread[0]);
     pthread_exit((void *)1);
 }
+
+void get_ip() 
+{
+    struct ifaddrs * ifAddrStruct=NULL;
+    void * tmpAddrPtr=NULL;
+
+    getifaddrs(&ifAddrStruct);
+
+    while (ifAddrStruct != NULL)
+    {
+        if (ifAddrStruct->ifa_addr->sa_family == AF_INET)
+        {
+            tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
+            inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
+            if(strcmp(ifAddrStruct->ifa_name, "lo"))
+            {
+                printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
+            }
+        }
+        ifAddrStruct=ifAddrStruct->ifa_next;
+    }
+}
+
 // 从配置文件读取ip
 void read_ip()
 {
     ifstream fin("config.txt");  
-    fin.getline(ip,15);
-    cout << "Read from file: " << ip << endl; 
+    fin.getline(addrs_buf,15);
+    cout << "Read from file: " << addrs_buf << endl; 
 }
