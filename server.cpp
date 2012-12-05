@@ -28,8 +28,8 @@ socklen_t           iLen(0);
 pthread_t           tid_apt = 0;
 vector<int>         Accepts;
 vector<pthread_t>   thread;
-map<int,char*>      chat_name;
-char                name_data[1][10];
+char                name_data[10];
+vector<string>      name_buf;
 
 struct sockaddr_in ser,cli;		
 
@@ -66,8 +66,8 @@ void server_socket()
     //等待首个client连接
     Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
     printf("port:[%d]\n",ntohs(cli.sin_port));
-    recv(Accepts[0],name_data[0],sizeof(name_data),0);
-    chat_name[0] = name_data[0];
+    recv(Accepts[0],name_data,sizeof(name_data),0);
+    name_buf.push_back(name_data);
     chat_num ++;
     thread.push_back(0);
 }
@@ -76,7 +76,7 @@ void *thrd_send(void *arg)
 {
     int     thrd_num = (intptr_t)arg;
     char    name_c[30] = " from "; 
-    char*   name_m = chat_name.find(thrd_num)->second; 
+    const char*   name_m = name_buf[thrd_num].c_str(); 
 
     recv(Accepts[thrd_num],buf_recv,sizeof(buf_recv),0);
     cout << "recv data from " << name_m << ":" << buf_recv << endl;
@@ -100,8 +100,8 @@ void *accept_client(void *arg)
     Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
     printf("port:[%d]\n",ntohs(cli.sin_port));
     // 接受client用户名存入name_data
-    recv(Accepts[chat_num],name_data[chat_num],sizeof(name_data),0);
-    chat_name[chat_num] = name_data[chat_num];
+    recv(Accepts[chat_num],name_data,sizeof(name_data),0);
+    name_buf.push_back(name_data); 
 
     for(int i = 0; i < chat_num; ++i)
     {

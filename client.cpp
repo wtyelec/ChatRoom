@@ -90,7 +90,9 @@ void *recv_ser(void *arg)
 {
     recv(sClient,buf_recv,sizeof(buf_recv),0);   
     if(buf_recv[0] != '\0')
+    {
         printf("recv data:%s\n",buf_recv);
+    }
     buf_recv[0] = '\0'; 
     pthread_cancel(thread[1]);
     pthread_exit((void *)0);
@@ -130,7 +132,7 @@ void *input_msg(void *arg)
     pthread_cancel(thread[0]);
     pthread_exit((void *)1);
 }
-
+// 遍历获取本地IP
 void get_ip() 
 {
     struct ifaddrs * ifAddrStruct=NULL;
@@ -142,10 +144,10 @@ void get_ip()
     {
         if (ifAddrStruct->ifa_addr->sa_family == AF_INET)
         {
-            tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
-            inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
             if(strcmp(ifAddrStruct->ifa_name, "lo"))
             {
+                tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
+                inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
                 printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
             }
         }
