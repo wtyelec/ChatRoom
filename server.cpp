@@ -40,7 +40,6 @@ int main()
 
     while(1)
     {
-        //listen_client();
         pthread_create(&tid_apt, NULL, accept_client, (void *)chat_num);
         for(int i = 0; i < chat_num; ++i)
         {
@@ -103,14 +102,6 @@ void *accept_client(void *arg)
     // 接受client用户名存入name_data
     recv(Accepts[chat_num],name_data,sizeof(name_data),0);
     name_buf.push_back(name_data); 
-    /*
-    for(int i = 0; i < chat_num; ++i)
-    {
-        cout << "cancel begin" << endl;
-        pthread_cancel(thread[i]);
-        cout << "cancel end" << endl;
-    }
-    */
     chat_num++;
     thread.push_back(0);
 }

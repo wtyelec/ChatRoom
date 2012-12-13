@@ -44,7 +44,6 @@ int main()
     get_ip();
     client_socket();	
     input_chat_name();
-    //send_chat_name();
     while(1)
     {
         pthread_create(&thread[0], NULL, recv_ser, NULL);
@@ -70,7 +69,6 @@ void client_socket()
     {
         sClient[i] = socket(AF_INET,SOCK_STREAM,0);	
         connect(sClient[i],(struct sockaddr *)&ser,sizeof(ser));   
-        //send_chat_name(i);
     }
 }
 // 输入client用户名,发送到服务器
