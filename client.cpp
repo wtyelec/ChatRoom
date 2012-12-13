@@ -15,17 +15,19 @@ using namespace std;
 
 #define SEND_BUF_SIZE 1024
 #define RECV_BUF_SIZE 1024
+#define MAX_CONNECT_NUM 1
 
 void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
 void input_chat_name();
+void send_chat_name(int i);
 void get_ip();
 void read_ip();
 
-int         sClient;
-char        buf_recv[1024];
-char        buf_send[1024];
+int         sClient[MAX_CONNECT_NUM];
+char        buf_recv[RECV_BUF_SIZE];
+char        buf_send[SEND_BUF_SIZE];
 void        *tret;
 time_t      start,end;
 double      dif(2);
@@ -40,9 +42,9 @@ int main()
     memset(buf_recv,0,sizeof(buf_recv));
     memset(buf_send,0,sizeof(buf_send));
     get_ip();
-    client_socket();	 
+    client_socket();	
     input_chat_name();
-    
+    //send_chat_name();
     while(1)
     {
         pthread_create(&thread[0], NULL, recv_ser, NULL);
@@ -52,8 +54,10 @@ int main()
             continue;
         }
     }
-
-    shutdown(sClient,2);
+    for(int i = 0; i < MAX_CONNECT_NUM; i++)
+    {
+        shutdown(sClient[i],2);
+    }
     return 0;
 }
 // socket通信
@@ -61,9 +65,13 @@ void client_socket()
 {
     ser.sin_family = AF_INET;
     ser.sin_port = htons(6666);
-    ser.sin_addr.s_addr = inet_addr(addrs_buf);//"192.168.86.137");
-    sClient = socket(AF_INET,SOCK_STREAM,0);	
-    connect(sClient,(struct sockaddr *)&ser,sizeof(ser));
+    ser.sin_addr.s_addr = inet_addr(addrs_buf);
+    for(int i = 0; i < MAX_CONNECT_NUM; i++)
+    {
+        sClient[i] = socket(AF_INET,SOCK_STREAM,0);	
+        connect(sClient[i],(struct sockaddr *)&ser,sizeof(ser));   
+        //send_chat_name(i);
+    }
 }
 // 输入client用户名,发送到服务器
 void input_chat_name()
@@ -83,12 +91,19 @@ void input_chat_name()
             continue;
         }
     }
-    send(sClient,name,sizeof(name),0); 
+    send(sClient[0],name,sizeof(name),0); 
 }
+
+void send_chat_name(int i)
+{
+    char name[10] = "aa";
+    send(sClient[i],name,sizeof(name),0);
+}
+
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
 {
-    recv(sClient,buf_recv,sizeof(buf_recv),0);   
+    recv(sClient[0],buf_recv,sizeof(buf_recv),0);   
     if(buf_recv[0] != '\0')
     {
         printf("recv data:%s\n",buf_recv);
@@ -125,7 +140,7 @@ void *input_msg(void *arg)
         }
         else
         {
-            send(sClient,buf_send,sizeof(buf_send),0);
+            send(sClient[0],buf_send,sizeof(buf_send),0);
             break;
         }
     }

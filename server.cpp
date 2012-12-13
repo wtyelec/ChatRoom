@@ -1,5 +1,4 @@
 #include <iostream>
-#include <map>
 #include <string>
 #include <vector>
 #include <sys/socket.h>
@@ -17,6 +16,7 @@ using namespace std;
 
 void *thrd_send(void *arg);
 void *accept_client(void *arg);
+void listen_client();
 void server_socket();
 
 char    buf_recv[RECV_BUF_SIZE];
@@ -28,8 +28,8 @@ socklen_t           iLen(0);
 pthread_t           tid_apt = 0;
 vector<int>         Accepts;
 vector<pthread_t>   thread;
-char                name_data[10];
 vector<string>      name_buf;
+char                name_data[10];
 
 struct sockaddr_in ser,cli;		
 
@@ -40,6 +40,7 @@ int main()
 
     while(1)
     {
+        //listen_client();
         pthread_create(&tid_apt, NULL, accept_client, (void *)chat_num);
         for(int i = 0; i < chat_num; ++i)
         {
@@ -65,7 +66,7 @@ void server_socket()
     iLen = sizeof(cli);
     //等待首个client连接
     Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
-    printf("port:[%d]\n",ntohs(cli.sin_port));
+    printf("port:[%d] num= %d\n",ntohs(cli.sin_port),chat_num+1);
     recv(Accepts[0],name_data,sizeof(name_data),0);
     name_buf.push_back(name_data);
     chat_num ++;
@@ -98,15 +99,28 @@ void *thrd_send(void *arg)
 void *accept_client(void *arg)
 {
     Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
-    printf("port:[%d]\n",ntohs(cli.sin_port));
+    printf("port:[%d] num = %d\n",ntohs(cli.sin_port),chat_num+1);
     // 接受client用户名存入name_data
     recv(Accepts[chat_num],name_data,sizeof(name_data),0);
     name_buf.push_back(name_data); 
-
+    /*
     for(int i = 0; i < chat_num; ++i)
     {
+        cout << "cancel begin" << endl;
         pthread_cancel(thread[i]);
+        cout << "cancel end" << endl;
     }
-    chat_num ++;
+    */
+    chat_num++;
     thread.push_back(0);
+}
+
+void listen_client()
+{
+    Accepts.push_back(accept(sListen,(struct sockaddr *)&cli,&iLen));
+    printf("port:[%d] num = %d\n",ntohs(cli.sin_port),chat_num+1);
+    // 接受client用户名存入name_data
+    recv(Accepts[chat_num],name_data,sizeof(name_data),0);
+    name_buf.push_back(name_data); 
+    chat_num++;
 }
