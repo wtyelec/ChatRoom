@@ -21,9 +21,8 @@ void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
 void input_chat_name();
-void send_chat_name(int i);
-void get_ip();
-void read_ip();
+void get_ip_local();
+void get_ip_config();
 
 int         sClient[MAX_CONNECT_NUM];
 char        buf_recv[RECV_BUF_SIZE];
@@ -33,7 +32,7 @@ time_t      start,end;
 double      dif(2);
 bool        flag_time(false);
 char        addrs_buf[15];
-pthread_t   thread[2] = {0};
+pthread_t   tid[2] = {0};
 
 struct  sockaddr_in ser;
 
@@ -41,14 +40,14 @@ int main()
 {
     memset(buf_recv,0,sizeof(buf_recv));
     memset(buf_send,0,sizeof(buf_send));
-    get_ip();
+    get_ip_local();
     client_socket();	
     input_chat_name();
     while(1)
     {
-        pthread_create(&thread[0], NULL, recv_ser, NULL);
-        pthread_create(&thread[1], NULL, input_msg, NULL);
-        if( (pthread_join(thread[0],&tret) == 0))
+        pthread_create(&tid[0], NULL, recv_ser, NULL);
+        pthread_create(&tid[1], NULL, input_msg, NULL);
+        if( (pthread_join(tid[0],&tret) == 0))
         {
             continue;
         }
@@ -92,22 +91,16 @@ void input_chat_name()
     send(sClient[0],name,sizeof(name),0); 
 }
 
-void send_chat_name(int i)
-{
-    char name[10] = "aa";
-    send(sClient[i],name,sizeof(name),0);
-}
-
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
 {
     recv(sClient[0],buf_recv,sizeof(buf_recv),0);   
     if(buf_recv[0] != '\0')
     {
-        printf("recv data:%s\n",buf_recv);
+        printf("recv data from %s\n",buf_recv);
     }
     buf_recv[0] = '\0'; 
-    pthread_cancel(thread[1]);
+    pthread_cancel(tid[1]);
     pthread_exit((void *)0);
 }
 // 线程2:输入聊天信息
@@ -142,11 +135,11 @@ void *input_msg(void *arg)
             break;
         }
     }
-    pthread_cancel(thread[0]);
+    pthread_cancel(tid[0]);
     pthread_exit((void *)1);
 }
 // 遍历获取本地IP
-void get_ip() 
+void get_ip_local() 
 {
     struct ifaddrs * ifAddrStruct=NULL;
     void * tmpAddrPtr=NULL;
@@ -169,7 +162,7 @@ void get_ip()
 }
 
 // 从配置文件读取ip
-void read_ip()
+void get_ip_config()
 {
     ifstream fin("config.txt");  
     fin.getline(addrs_buf,15);
