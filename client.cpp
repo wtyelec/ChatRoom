@@ -24,22 +24,22 @@ void input_chat_name();
 void get_ip_local();
 void get_ip_config();
 
-int         sClient[MAX_CONNECT_NUM];
+char        addrs_buf[15];
 char        buf_recv[RECV_BUF_SIZE];
 char        buf_send[SEND_BUF_SIZE];
+bool        flag_time(false);
+int         sClient[MAX_CONNECT_NUM];
 void        *tret;
 time_t      start,end;
 double      dif(2);
-bool        flag_time(false);
-char        addrs_buf[15];
 pthread_t   tid[2] = {0};
 
 struct  sockaddr_in ser;
 
 int main()
 {
-    memset(buf_recv,0,sizeof(buf_recv));
-    memset(buf_send,0,sizeof(buf_send));
+    memset(buf_recv, 0, sizeof(buf_recv));
+    memset(buf_send, 0, sizeof(buf_send));
     get_ip_local();
     client_socket();	
     input_chat_name();
@@ -47,14 +47,14 @@ int main()
     {
         pthread_create(&tid[0], NULL, recv_ser, NULL);
         pthread_create(&tid[1], NULL, input_msg, NULL);
-        if( (pthread_join(tid[0],&tret) == 0))
+        if( (pthread_join(tid[0], &tret) == 0))
         {
             continue;
         }
     }
     for(int i = 0; i < MAX_CONNECT_NUM; i++)
     {
-        shutdown(sClient[i],2);
+        shutdown(sClient[i], 2);
     }
     return 0;
 }
@@ -66,8 +66,8 @@ void client_socket()
     ser.sin_addr.s_addr = inet_addr(addrs_buf);
     for(int i = 0; i < MAX_CONNECT_NUM; i++)
     {
-        sClient[i] = socket(AF_INET,SOCK_STREAM,0);	
-        connect(sClient[i],(struct sockaddr *)&ser,sizeof(ser));   
+        sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
+        connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
     }
 }
 // 输入client用户名,发送到服务器
@@ -88,16 +88,16 @@ void input_chat_name()
             continue;
         }
     }
-    send(sClient[0],name,sizeof(name),0); 
+    send(sClient[0], name, sizeof(name),0); 
 }
 
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
 {
-    recv(sClient[0],buf_recv,sizeof(buf_recv),0);   
+    recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
     if(buf_recv[0] != '\0')
     {
-        printf("recv data from %s\n",buf_recv);
+        printf("recv data from %s\n", buf_recv);
     }
     buf_recv[0] = '\0'; 
     pthread_cancel(tid[1]);
@@ -118,7 +118,7 @@ void *input_msg(void *arg)
             time(&end);
             flag_time = true;
         }
-        dif = difftime(end,start);
+        dif = difftime(end, start);
         if(dif > -2 && dif < 2)                 // 防止频繁输入
         {
             printf("input too fast! wait\n");
@@ -131,7 +131,7 @@ void *input_msg(void *arg)
         }
         else
         {
-            send(sClient[0],buf_send,sizeof(buf_send),0);
+            send(sClient[0], buf_send, sizeof(buf_send), 0);
             break;
         }
     }
@@ -165,6 +165,6 @@ void get_ip_local()
 void get_ip_config()
 {
     ifstream fin("config.txt");  
-    fin.getline(addrs_buf,15);
+    fin.getline(addrs_buf, 15);
     cout << "Read from file: " << addrs_buf << endl; 
 }
