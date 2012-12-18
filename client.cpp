@@ -29,28 +29,42 @@ char        buf_recv[RECV_BUF_SIZE];
 char        buf_send[SEND_BUF_SIZE];
 bool        flag_time(false);
 int         sClient[MAX_CONNECT_NUM];
+int         sleep_sec(4);
 void        *tret;
 time_t      start,end;
 double      dif(2);
 pthread_t   tid[2] = {0};
-
+pthread_mutex_t     mutex;
+pthread_attr_t      attr;
 struct  sockaddr_in ser;
 
-int main()
+int main(int argc, char* argv[])
 {
+    if(argc > 1)
+    {
+        sleep_sec = atoi(argv[1]);
+    }
+    pthread_mutex_init(&mutex,NULL);
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  
     memset(buf_recv, 0, sizeof(buf_recv));
     memset(buf_send, 0, sizeof(buf_send));
     get_ip_local();
-    client_socket();	
     input_chat_name();
     while(1)
     {
-        pthread_create(&tid[0], NULL, recv_ser, NULL);
-        pthread_create(&tid[1], NULL, input_msg, NULL);
+        pthread_create(&tid[0], &attr, recv_ser, NULL);
+        pthread_create(&tid[1], &attr, input_msg, NULL);
+        while(1)
+        {
+
+        };
+        /*
         if( (pthread_join(tid[0], &tret) == 0))
         {
             continue;
         }
+        */
     }
     for(int i = 0; i < MAX_CONNECT_NUM; i++)
     {
@@ -88,24 +102,29 @@ void input_chat_name()
             continue;
         }
     }
+    client_socket();	
     send(sClient[0], name, sizeof(name),0); 
 }
-
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
 {
     recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
+    pthread_mutex_lock(&mutex);
     if(buf_recv[0] != '\0')
     {
         printf("recv data from %s\n", buf_recv);
     }
     buf_recv[0] = '\0'; 
-    pthread_cancel(tid[1]);
+    //pthread_cancel(tid[1]);
+    pthread_mutex_unlock(&mutex);
+    pthread_create(&tid[0], &attr, recv_ser, NULL);
     pthread_exit((void *)0);
 }
 // 线程2:输入聊天信息
 void *input_msg(void *arg)
 {
+    //pthread_mutex_lock(&mutex);
+    /*
     while(cin >> buf_send)
     {
         if(flag_time)
@@ -135,7 +154,12 @@ void *input_msg(void *arg)
             break;
         }
     }
-    pthread_cancel(tid[0]);
+*/   
+    sleep(sleep_sec);
+    send(sClient[0], "xx", sizeof("xx"), 0);
+    //pthread_cancel(tid[0]);
+    //pthread_mutex_unlock(&mutex);
+    pthread_create(&tid[1], &attr, input_msg, NULL);
     pthread_exit((void *)1);
 }
 // 遍历获取本地IP
@@ -160,7 +184,6 @@ void get_ip_local()
         ifAddrStruct=ifAddrStruct->ifa_next;
     }
 }
-
 // 从配置文件读取ip
 void get_ip_config()
 {
