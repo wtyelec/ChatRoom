@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
     memset(buf_recv, 0, sizeof(buf_recv));
     memset(buf_send, 0, sizeof(buf_send));
     get_ip_local();
+    //client_socket();	
     input_chat_name();
     while(1)
     {
@@ -59,17 +60,8 @@ int main(int argc, char* argv[])
         {
 
         };
-        /*
-        if( (pthread_join(tid[0], &tret) == 0))
-        {
-            continue;
-        }
-        */
     }
-    for(int i = 0; i < MAX_CONNECT_NUM; i++)
-    {
-        shutdown(sClient[i], 2);
-    }
+
     return 0;
 }
 // socket通信
@@ -82,6 +74,7 @@ void client_socket()
     {
         sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
         connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
+        //send(sClient[i], "aa", sizeof("aa"),0);     // 测试多连接压力 
     }
 }
 // 输入client用户名,发送到服务器
@@ -115,7 +108,6 @@ void *recv_ser(void *arg)
         printf("recv data from %s\n", buf_recv);
     }
     buf_recv[0] = '\0'; 
-    //pthread_cancel(tid[1]);
     pthread_mutex_unlock(&mutex);
     pthread_create(&tid[0], &attr, recv_ser, NULL);
     pthread_exit((void *)0);
@@ -123,7 +115,6 @@ void *recv_ser(void *arg)
 // 线程2:输入聊天信息
 void *input_msg(void *arg)
 {
-    //pthread_mutex_lock(&mutex);
     /*
     while(cin >> buf_send)
     {
@@ -154,11 +145,9 @@ void *input_msg(void *arg)
             break;
         }
     }
-*/   
+  */ 
     sleep(sleep_sec);
     send(sClient[0], "xx", sizeof("xx"), 0);
-    //pthread_cancel(tid[0]);
-    //pthread_mutex_unlock(&mutex);
     pthread_create(&tid[1], &attr, input_msg, NULL);
     pthread_exit((void *)1);
 }

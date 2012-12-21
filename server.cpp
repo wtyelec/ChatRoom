@@ -4,61 +4,71 @@
 #include <map>
 #include <set>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <stdlib.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <errno.h>
-#include <pthread.h>
-#include <unistd.h>
 
 using namespace std;
 
 #define RECV_BUF_SIZE 1024
 
-void *send_msg(void *arg);
-void *accept_client(void *arg);
-void listen_client();
+void send_msg(int sid);
+void accept_client();
 void server_socket();
 
+char    name_data[10];
 char    buf_recv[RECV_BUF_SIZE];
 int     sListen(0);
-void    *tret;
+int     fdp_max(0);
 
+fd_set              fds;
 socklen_t           iLen(0);						
-pthread_t           tid_apt(0);
-pthread_mutex_t     mutex;
-pthread_attr_t      attr;
-set<int>            socket_v;
-map<int,pthread_t>  tid_m;
+set<int>            socket_s;
 map<int,string>     name_buf;
-char                name_data[10];
 
-struct sockaddr_in ser,cli;		
+struct timeval      timeout;
+struct sockaddr_in  ser;
+struct sockaddr_in  cli;		
 
 int main(int argc, char* argv[])
 {
-    pthread_mutex_init(&mutex,NULL);
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  
     memset(buf_recv,0,sizeof(buf_recv));
+    timeout.tv_sec = timeout.tv_usec = 0;
     server_socket();
 
     while(1)
     {
-        int i(0);
-        pthread_create(&tid_apt, NULL, accept_client, (void *)socket_v.size());
-        for(set<int>::iterator it = socket_v.begin(); it != socket_v.end(); it++)
+        FD_ZERO(&fds);
+        FD_SET(sListen, &fds);
+        for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
         {
-            tid_m.insert(pair<int,pthread_t>(*it, i++)); 
-            pthread_create(&tid_m[*it], &attr, send_msg, (void *)*it);
+            FD_SET(*it, &fds);
+            fdp_max = fdp_max < *it ? *it:fdp_max;
         }
-        if((pthread_join(tid_apt, &tret) == 0))
+        fdp_max = fdp_max < sListen ? sListen:fdp_max;
+        switch(select(fdp_max +1, &fds, NULL, NULL, &timeout))
         {
-            continue;
+            case -1:
+                cout << "select error!" << endl;
+                break;
+            case 0:
+                break;
+            default:
+                if(socket_s.size() > 0)
+                {
+                    for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
+                    {
+                        if(FD_ISSET(*it, &fds))
+                        {
+                            send_msg(*it);
+                        }
+                    }
+                }
+                if(FD_ISSET(sListen, &fds))
+                {
+                    accept_client();
+                }
         }
     }
-	shutdown(sListen,2);
+
     return 0;
 }
 // socket通信
@@ -73,23 +83,21 @@ void server_socket()
     iLen = sizeof(cli);
 }
 // 线程1:发送消息给其他客户端
-void *send_msg(void *arg)
+void send_msg(int sid)
 {
-    int sid = (intptr_t)arg;
     char name_c[30] = ""; 
     const char* name_m = name_buf[sid].c_str(); 
     int recv_int = recv(sid, buf_recv, sizeof(buf_recv), 0);
-    pthread_mutex_lock(&mutex);
     if( recv_int > 0)
     {
         cout << "recv data from " << name_m << ": " << buf_recv << endl;
-        if(socket_v.size() > 1)
+        if(socket_s.size() > 1)
         {
             strcat(name_c, name_m);
             strcat(name_c, ": ");
             strcat(name_c, buf_recv);
 
-            for(set<int>::iterator it = socket_v.begin(); it != socket_v.end(); it++)
+            for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
             {
                 if(*it != sid)
                 {
@@ -100,25 +108,18 @@ void *send_msg(void *arg)
     }
     else
     {
-        socket_v.erase(sid);
+        socket_s.erase(sid);
         cout << sid << "has removed" << endl;
     }
-    //pthread_cancel(tid_apt);
-    pthread_mutex_unlock(&mutex);
-    pthread_create(&tid_m[sid], &attr, send_msg, (void *)sid);
-    pthread_exit((void *)0);
 }
 // 线程2:监听客户端连接请求
-void *accept_client(void *arg)
+void accept_client()
 {
     int tmp = accept(sListen, (struct sockaddr *)&cli, &iLen);
-    pthread_mutex_lock(&mutex);
+    cout << "accept = " << tmp << endl;
     // 接受client用户名存入name_data
     recv(tmp, name_data, sizeof(name_data),0);
     name_buf.insert(pair<int,string>(tmp, name_data)); 
-    socket_v.insert(tmp);
-    cout << "port:" << ntohs(cli.sin_port) << " num:" << socket_v.size() << endl;
-    //tid_v.push_back(0);
-    pthread_mutex_unlock(&mutex);
-    pthread_exit((void *)0);
+    socket_s.insert(tmp);
+    cout << "port:" << ntohs(cli.sin_port) << " num:" << socket_s.size() << endl;
 }
