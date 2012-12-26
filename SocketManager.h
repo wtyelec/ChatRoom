@@ -3,12 +3,16 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <set>
+
+using namespace std;
 
 class SocketInfo
 {
 public:
     int         sListen;
     socklen_t   iLen;
+    set<int>    socket_s;
     struct sockaddr_in ser;
     struct sockaddr_in cli;
 
@@ -18,7 +22,8 @@ public:
         iLen = 0;
     };
 
-    virtual void init();   
+    virtual void Init();   
+    virtual int AcceptSocket();
 };
 
 #endif

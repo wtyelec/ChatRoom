@@ -2,7 +2,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
 #include "SocketManager.h"
 
 using namespace std;
@@ -18,7 +17,6 @@ char    buf_recv[RECV_BUF_SIZE];
 int     fdp_max(0);
 
 fd_set              fds;
-set<int>            socket_s;
 map<int,string>     name_buf;
 
 struct timeval      timeout;
@@ -26,20 +24,21 @@ SocketInfo          sInfo;
 
 int main(int argc, char* argv[])
 {
-    memset(buf_recv,0,sizeof(buf_recv));
+    memset(buf_recv, 0, sizeof(buf_recv));
     timeout.tv_sec = timeout.tv_usec = 0;
-    sInfo.init();
+    sInfo.Init();
 
     while(1)
     {
         FD_ZERO(&fds);
         FD_SET(sInfo.sListen, &fds);
-        for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
+        for(set<int>::iterator it = sInfo.socket_s.begin(); it != sInfo.socket_s.end(); it++)
         {
             FD_SET(*it, &fds);
             fdp_max = fdp_max < *it ? *it:fdp_max;
         }
         fdp_max = fdp_max < sInfo.sListen ? sInfo.sListen:fdp_max;
+
         switch(select(fdp_max +1, &fds, NULL, NULL, &timeout))
         {
             case -1:
@@ -48,9 +47,9 @@ int main(int argc, char* argv[])
             case 0:
                 break;
             default:
-                if(socket_s.size() > 0)
+                if(sInfo.socket_s.size() > 0)
                 {
-                    for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
+                    for(set<int>::iterator it = sInfo.socket_s.begin(); it != sInfo.socket_s.end(); it++)
                     {
                         if(FD_ISSET(*it, &fds))
                         {
@@ -76,13 +75,13 @@ void send_msg(int sid)
     if(recv_int > 0)
     {
         cout << "recv data from " << name_m << ": " << buf_recv << endl;
-        if(socket_s.size() > 1)
+        if(sInfo.socket_s.size() > 1)
         {
             strcat(name_c, name_m);
             strcat(name_c, ": ");
             strcat(name_c, buf_recv);
 
-            for(set<int>::iterator it = socket_s.begin(); it != socket_s.end(); it++)
+            for(set<int>::iterator it = sInfo.socket_s.begin(); it != sInfo.socket_s.end(); it++)
             {
                 if(*it != sid)
                 {
@@ -93,17 +92,17 @@ void send_msg(int sid)
     }
     else
     {
-        socket_s.erase(sid);
+        sInfo.socket_s.erase(sid);
         cout << sid << "has removed" << endl;
     }
 }
 // 线程2:监听客户端连接请求
 void accept_client()
 {
-    int tmp = accept(sInfo.sListen, (struct sockaddr *)&sInfo.cli, &sInfo.iLen);
+    int cid = sInfo.AcceptSocket();
+    sInfo.socket_s.insert(cid);
+    cout << "port:" << ntohs(sInfo.cli.sin_port) << " num:" << sInfo.socket_s.size() << endl;
     // 接受client用户名存入name_data
-    recv(tmp, name_data, sizeof(name_data),0);
-    name_buf.insert(pair<int,string>(tmp, name_data)); 
-    socket_s.insert(tmp);
-    cout << "port:" << ntohs(sInfo.cli.sin_port) << " num:" << socket_s.size() << endl;
+    recv(cid, name_data, sizeof(name_data), 0);
+    name_buf.insert(pair<int,string>(cid, name_data)); 
 }

@@ -1,6 +1,6 @@
 #include "SocketManager.h"
 
-void SocketInfo::init()
+void SocketInfo::Init()
 {
     ser.sin_family = AF_INET;
     ser.sin_addr.s_addr = INADDR_ANY;
@@ -9,4 +9,9 @@ void SocketInfo::init()
     bind(sListen, (struct sockaddr*)&ser, sizeof(ser));
     listen(sListen, 5);
     iLen = sizeof(cli);
+}
+
+int SocketInfo::AcceptSocket()
+{
+    return accept(sListen, (struct sockaddr *)&cli, &iLen);
 }
