@@ -13,5 +13,7 @@ void SocketInfo::Init()
 
 int SocketInfo::AcceptSocket()
 {
-    return accept(sListen, (struct sockaddr *)&cli, &iLen);
+    int cSid = accept(sListen, (struct sockaddr *)&cli, &iLen);
+    socket_s.insert(cSid);
+    return cSid; 
 }
