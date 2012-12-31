@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
 
         };
     }
+    cout << "disconnect with server" << endl;
 
     return 0;
 }
@@ -101,15 +102,22 @@ void input_chat_name()
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
 {
-    recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
-    pthread_mutex_lock(&mutex);
-    if(buf_recv[0] != '\0')
+    int recv_err = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
+    if(recv_err > 0)
     {
-        printf("recv data from %s\n", buf_recv);
+        pthread_mutex_lock(&mutex);
+        if(buf_recv[0] != '\0')
+        {
+            printf("recv data from %s\n", buf_recv);
+        }
+        buf_recv[0] = '\0'; 
+        pthread_mutex_unlock(&mutex);
+        pthread_create(&tid[0], &attr, recv_ser, NULL);
     }
-    buf_recv[0] = '\0'; 
-    pthread_mutex_unlock(&mutex);
-    pthread_create(&tid[0], &attr, recv_ser, NULL);
+    else
+    {
+        cout << "disconnect with server" << endl;
+    }
     pthread_exit((void *)0);
 }
 // 线程2:输入聊天信息

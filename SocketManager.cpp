@@ -1,4 +1,7 @@
+#include <iostream>
 #include "SocketManager.h"
+
+using namespace std;
 
 void SocketInfo::Init()
 {
@@ -9,11 +12,11 @@ void SocketInfo::Init()
     bind(sListen, (struct sockaddr*)&ser, sizeof(ser));
     listen(sListen, 5);
     iLen = sizeof(cli);
+    cout << "server init succeed" << endl;
 }
 
 int SocketInfo::AcceptSocket()
 {
     int cSid = accept(sListen, (struct sockaddr *)&cli, &iLen);
-    socket_s.insert(cSid);
     return cSid; 
 }

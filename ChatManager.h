@@ -22,7 +22,7 @@ class ChatManager
 public:
     virtual void SendMessage(int sid, map<int,UserInfo>& uInfo_m, SocketInfo& sInfo);
     virtual void AcceptClient(map<int,UserInfo>& uInfo_m, SocketInfo& sInfo);
-    static void SendMsgToClients(const set<int>& ids, const char* msg);
+    static void SendMsgToClients(map<int,UserInfo>& uInfo_m, const char* msg);
 };
 
 #endif
