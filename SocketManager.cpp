@@ -3,20 +3,19 @@
 
 using namespace std;
 
-void SocketInfo::Init()
+void sock_info_t::init()
 {
-    ser.sin_family = AF_INET;
-    ser.sin_addr.s_addr = INADDR_ANY;
-    ser.sin_port = htons(6666);
-    sListen = socket(AF_INET, SOCK_STREAM, 0);
-    bind(sListen, (struct sockaddr*)&ser, sizeof(ser));
-    listen(sListen, 5);
-    iLen = sizeof(cli);
+    m_ser.sin_family = AF_INET;
+    m_ser.sin_addr.s_addr = INADDR_ANY;
+    m_ser.sin_port = htons(6666);
+    m_ser_sock = socket(AF_INET, SOCK_STREAM, 0);
+    bind(m_ser_sock, (struct sockaddr*)&m_ser, sizeof(m_ser));
+    listen(m_ser_sock, 5);
+    m_len = sizeof(m_cli);
     cout << "server init succeed" << endl;
 }
 
-int SocketInfo::AcceptSocket()
+int sock_info_t::accept_cli()
 {
-    int cSid = accept(sListen, (struct sockaddr *)&cli, &iLen);
-    return cSid; 
+    return accept(m_ser_sock, (struct sockaddr *)&m_cli, &m_len);
 }

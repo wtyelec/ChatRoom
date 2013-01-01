@@ -4,30 +4,30 @@
 
 using namespace std;
 
-fd_set              fds;
-struct timeval      timeout;
-map<int,UserInfo>   userInfo_buf;
-SocketInfo          sInfo;
-ChatManager         chatManager;
+fd_set                  g_fds;
+struct timeval          g_timeout;
+map<int,user_info_t>    g_user_info;
+sock_info_t             g_sock_info;
+chat_manager_t          g_chat_manager;
 
 int main(int argc, char* argv[])
 {
-    timeout.tv_sec = timeout.tv_usec = 0;
-    sInfo.Init();
-    int fdp_max(sInfo.sListen);
+    g_timeout.tv_sec = g_timeout.tv_usec = 0;
+    g_sock_info.init();
+    int fdp_max(g_sock_info.get_ser_sock());
     
     while(1)
     {
-        FD_ZERO(&fds);
-        FD_SET(sInfo.sListen, &fds);
-        for(map<int,UserInfo>::iterator it = userInfo_buf.begin(); it != userInfo_buf.end(); it++)
+        FD_ZERO(&g_fds);
+        FD_SET(g_sock_info.get_ser_sock(), &g_fds);
+        for(map<int,user_info_t>::iterator it = g_user_info.begin(); it != g_user_info.end(); it++)
         {
             int sid = (*it).first;
-            FD_SET(sid, &fds);
+            FD_SET(sid, &g_fds);
             fdp_max = fdp_max < sid ? sid:fdp_max;
         }
 
-        switch(select(fdp_max+1, &fds, NULL, NULL, &timeout))
+        switch(select(fdp_max+1, &g_fds, NULL, NULL, &g_timeout))
         {
             case -1:
                 cout << "select error!" << endl;
@@ -35,19 +35,19 @@ int main(int argc, char* argv[])
             case 0:
                 break;
             default:
-                if(userInfo_buf.size() > 0)
+                if(g_user_info.size() > 0)
                 {
-                    for(map<int,UserInfo>::iterator it = userInfo_buf.begin(); it != userInfo_buf.end(); it++)
+                    for(map<int,user_info_t>::iterator it = g_user_info.begin(); it != g_user_info.end(); it++)
                     {
-                        if(FD_ISSET((*it).first, &fds))
+                        if(FD_ISSET((*it).first, &g_fds))
                         {
-                            chatManager.SendMessage((*it).first, userInfo_buf, sInfo);
+                            g_chat_manager.send_msg((*it).first, g_user_info, g_sock_info);
                         }
                     }
                 }
-                if(FD_ISSET(sInfo.sListen, &fds))
+                if(FD_ISSET(g_sock_info.get_ser_sock(), &g_fds))
                 {
-                    chatManager.AcceptClient(userInfo_buf, sInfo);
+                    g_chat_manager.wait_cli_conn(g_user_info, g_sock_info);
                 }
         }
     }

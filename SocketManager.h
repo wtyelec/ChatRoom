@@ -6,22 +6,33 @@
 
 using namespace std;
 
-class SocketInfo
+class sock_info_t
 {
+private:
+    int         m_ser_sock;
+    socklen_t   m_len;
+    struct sockaddr_in m_ser;
+    struct sockaddr_in m_cli;
 public:
-    int         sListen;
-    socklen_t   iLen;
-    struct sockaddr_in ser;
-    struct sockaddr_in cli;
-
-    SocketInfo()
+    sock_info_t()
     {
-        sListen = 0;
-        iLen = 0;
+        m_ser_sock = 0;
+        m_len = 0;
     };
 
-    virtual void Init();   
-    virtual int AcceptSocket();
+    inline int get_ser_sock()
+    {
+        return m_ser_sock;
+    }
+
+    inline sockaddr_in get_cli()
+    {
+        return m_cli;
+    }
+
+    virtual void init();   
+    virtual int accept_cli();
+
 };
 
 #endif
