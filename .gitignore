@@ -1,0 +1,5 @@
+.gitignore
+*.out
+Generate
+*.swo
+*.swp
