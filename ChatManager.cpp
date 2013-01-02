@@ -16,7 +16,7 @@ void chat_manager_t::group_send(int sid_)
         {
             msg = msg + ": " + buf_recv + " (in a chat room)";
             map<int,user_info_t> tmp(g_user_info);
-            tmp.erase(sid_);         // ÒÆ³ý×Ô¼ºµÄsid
+            tmp.erase(sid_);      
             for(map<int,user_info_t>::iterator it = tmp.begin(); it != tmp.end(); it++)
             {
                 send((*it).first, msg.c_str(), 30, 0);
@@ -32,7 +32,7 @@ void chat_manager_t::group_send(int sid_)
     }
 }
 
-void chat_manager_t::prvt_send(int sid_)
+void chat_manager_t::private_send(int sid_)
 {
     char buf_recv[1024];
     memset(buf_recv, 0, sizeof(buf_recv));
@@ -40,8 +40,8 @@ void chat_manager_t::prvt_send(int sid_)
     {
         string msg = g_sock_name[sid_];
         cout << "recv data from " << msg << ": " << buf_recv << endl;
-        int target_sock = g_name_sock[g_prvt_sock[sid_]]; 
-        if(g_prvt_sock.size() > 0)
+        int target_sock = g_name_sock[g_private_sock[sid_]]; 
+        if(g_private_sock.size() > 0)
         {
             msg = msg + ": " + buf_recv;
             send(target_sock, msg.c_str(), 30, 0);
@@ -50,7 +50,7 @@ void chat_manager_t::prvt_send(int sid_)
     else
     {
         cout << g_sock_name[sid_] << " offline" << endl;
-        g_prvt_sock.erase(sid_);
+        g_private_sock.erase(sid_);
         g_name_sock.erase(g_sock_name[sid_]);
         g_sock_name.erase(sid_);
     }
@@ -87,7 +87,7 @@ void chat_manager_t::wait_cli_conn()
             int target_id = (*g_name_sock.find(target_name)).second; 
             if(target_id != 0)
             {
-                g_prvt_sock[cli_sock] = target_name; 
+                g_private_sock[cli_sock] = target_name; 
             }
         }
     }

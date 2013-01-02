@@ -9,6 +9,8 @@ void sock_info_t::init()
     m_ser.sin_addr.s_addr = INADDR_ANY;
     m_ser.sin_port = htons(6666);
     m_ser_sock = socket(AF_INET, SOCK_STREAM, 0);
+    int opt =1;
+    setsockopt(m_ser_sock,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
     bind(m_ser_sock, (struct sockaddr*)&m_ser, sizeof(m_ser));
     listen(m_ser_sock, 5);
     m_len = sizeof(m_cli);
