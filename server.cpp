@@ -6,8 +6,11 @@ using namespace std;
 
 fd_set                  g_fds;
 struct timeval          g_timeout;
-map<int,user_info_t>    g_user_info;
 sock_info_t             g_sock_info;
+map<string,int>         g_name_sock;
+map<int,string>         g_sock_name;
+map<int,user_info_t>    g_user_info;
+map<int,string>         g_prvt_sock;
 chat_manager_t          g_chat_manager;
 
 int main(int argc, char* argv[])
@@ -22,9 +25,15 @@ int main(int argc, char* argv[])
         FD_SET(g_sock_info.get_ser_sock(), &g_fds);
         for(map<int,user_info_t>::iterator it = g_user_info.begin(); it != g_user_info.end(); it++)
         {
-            int sid = (*it).first;
-            FD_SET(sid, &g_fds);
-            fdp_max = fdp_max < sid ? sid:fdp_max;
+            int sock = (*it).first;
+            FD_SET(sock, &g_fds);
+            fdp_max = fdp_max < sock ? sock:fdp_max;
+        }
+        for(map<int,string>::iterator it = g_prvt_sock.begin(); it != g_prvt_sock.end(); it++)
+        {
+            int sock = (*it).first;
+            FD_SET(sock, &g_fds);
+            fdp_max = fdp_max < sock ? sock:fdp_max;
         }
 
         switch(select(fdp_max+1, &g_fds, NULL, NULL, &g_timeout))
@@ -41,7 +50,17 @@ int main(int argc, char* argv[])
                     {
                         if(FD_ISSET((*it).first, &g_fds))
                         {
-                            g_chat_manager.send_msg((*it).first);
+                            g_chat_manager.group_send((*it).first);
+                        }
+                    }
+                }
+                if(g_prvt_sock.size() > 0)
+                {
+                    for(map<int,string>::iterator it = g_prvt_sock.begin(); it != g_prvt_sock.end(); it++)
+                    {
+                        if(FD_ISSET((*it).first, &g_fds))
+                        {
+                            g_chat_manager.prvt_send((*it).first);
                         }
                     }
                 }

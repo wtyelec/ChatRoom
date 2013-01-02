@@ -21,6 +21,7 @@ void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
 void input_chat_name();
+void input_target_name();
 void get_ip_local();
 void get_ip_config();
 
@@ -50,8 +51,9 @@ int main(int argc, char* argv[])
     memset(buf_recv, 0, sizeof(buf_recv));
     memset(buf_send, 0, sizeof(buf_send));
     get_ip_local();
-    //client_socket();	
+    client_socket();	
     input_chat_name();
+    input_target_name();	
     while(1)
     {
         pthread_create(&tid[0], &attr, recv_ser, NULL);
@@ -96,7 +98,26 @@ void input_chat_name()
             continue;
         }
     }
-    client_socket();	
+    send(sClient[0], name, sizeof(name),0); 
+}
+// 输入聊天对象名字,发送到服务器
+void input_target_name()
+{
+    char name[10];
+
+    cout << "input target" << endl;
+    while(cin >> name)
+    {
+        if(strlen(name) < 10)
+        {
+            break;
+        }
+        else 
+        {
+            cout << "name too long,input again" << endl;
+            continue;
+        }
+    }
     send(sClient[0], name, sizeof(name),0); 
 }
 // 线程1:接受服务器发来消息
@@ -117,6 +138,7 @@ void *recv_ser(void *arg)
     else
     {
         cout << "disconnect with server" << endl;
+        close(sClient[0]);
         exit(0);
     }
     pthread_exit((void *)0);
@@ -124,7 +146,6 @@ void *recv_ser(void *arg)
 // 线程2:输入聊天信息
 void *input_msg(void *arg)
 {
-    /*
     while(cin >> buf_send)
     {
         if(flag_time)
@@ -154,9 +175,10 @@ void *input_msg(void *arg)
             break;
         }
     }
-  */ 
+    /*
     sleep(sleep_sec);
     send(sClient[0], "xx", sizeof("xx"), 0);
+  */ 
     pthread_create(&tid[1], &attr, input_msg, NULL);
     pthread_exit((void *)1);
 }

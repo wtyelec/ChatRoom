@@ -32,9 +32,9 @@ private:
 class chat_manager_t
 {
 public:
-    virtual void send_msg(int sid_);
+    virtual void group_send(int sid_);
+    virtual void prvt_send(int sid_);
     virtual void wait_cli_conn();
-    inline static void group_send(map<int,user_info_t>& user_info_, const char* msg_);
 };
 
 #endif

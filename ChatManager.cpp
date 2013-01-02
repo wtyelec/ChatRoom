@@ -4,7 +4,7 @@
 
 using namespace std;
 
-void chat_manager_t::send_msg(int sid_)
+void chat_manager_t::group_send(int sid_)
 {
     char buf_recv[1024];
     memset(buf_recv, 0, sizeof(buf_recv));
@@ -14,35 +14,87 @@ void chat_manager_t::send_msg(int sid_)
         cout << "recv data from " << msg << ": " << buf_recv << endl;
         if(g_user_info.size() > 1)
         {
-            msg = msg + ": " + buf_recv;
+            msg = msg + ": " + buf_recv + " (in a chat room)";
             map<int,user_info_t> tmp(g_user_info);
             tmp.erase(sid_);         // 移除自己的sid
-            group_send(tmp, msg.c_str());
+            for(map<int,user_info_t>::iterator it = tmp.begin(); it != tmp.end(); it++)
+            {
+                send((*it).first, msg.c_str(), 30, 0);
+            }
         }
     }
     else
     {
         cout << g_user_info[sid_].get_name() << " leave the chatroom." << endl;
         g_user_info.erase(sid_);
+        g_name_sock.erase(g_sock_name[sid_]);
+        g_sock_name.erase(sid_);
     }
 }
 
-void chat_manager_t::group_send(map<int,user_info_t>& user_info_, const char* msg_)
+void chat_manager_t::prvt_send(int sid_)
 {
-    for(map<int,user_info_t>::iterator it = user_info_.begin(); it != user_info_.end(); it++)
+    char buf_recv[1024];
+    memset(buf_recv, 0, sizeof(buf_recv));
+    if(recv(sid_, buf_recv, sizeof(buf_recv), 0) > 0)
     {
-        send((*it).first, msg_, 30, 0);
+        string msg = g_sock_name[sid_];
+        cout << "recv data from " << msg << ": " << buf_recv << endl;
+        int target_sock = g_name_sock[g_prvt_sock[sid_]]; 
+        if(g_prvt_sock.size() > 0)
+        {
+            msg = msg + ": " + buf_recv;
+            send(target_sock, msg.c_str(), 30, 0);
+        }
+    }
+    else
+    {
+        cout << g_sock_name[sid_] << " offline" << endl;
+        g_prvt_sock.erase(sid_);
+        g_name_sock.erase(g_sock_name[sid_]);
+        g_sock_name.erase(sid_);
     }
 }
 
 void chat_manager_t::wait_cli_conn()
 {
     int cli_sock = g_sock_info.accept_cli();
-    cout << "port:" << ntohs(g_sock_info.get_cli().sin_port) << " num:" << g_user_info.size() + 1 << endl;
-    // 接受client用户名存入name_data
-    char name_data[10];
-    recv(cli_sock, name_data, sizeof(name_data), 0);
-    user_info_t newUser;
-    newUser.set_name(name_data);
-    g_user_info[cli_sock] = newUser;
+
+    char conn_name[10];
+    if(recv(cli_sock, conn_name, sizeof(conn_name), 0) > 0)
+    {
+        g_sock_name[cli_sock] = conn_name;
+        g_name_sock[conn_name] = cli_sock;
+        cout << "port:" << ntohs(g_sock_info.get_cli().sin_port) << " num:" << g_name_sock.size()  << endl;
+    }
+    else
+    {
+        cout << "input name error" << endl;
+        return;
+    }
+
+    char target_name[10];
+    if(recv(cli_sock, target_name, sizeof(target_name), 0) > 0)
+    {
+        if(strcmp("all",target_name) == 0)
+        {
+            user_info_t newUser;
+            newUser.set_name(conn_name);
+            g_user_info[cli_sock] = newUser;
+        }            
+        else
+        {
+            int target_id = (*g_name_sock.find(target_name)).second; 
+            if(target_id != 0)
+            {
+                g_prvt_sock[cli_sock] = target_name; 
+            }
+        }
+    }
+    else
+    {
+        cout << "input target error" << endl;
+        g_name_sock.erase(g_sock_name[cli_sock]);
+        g_sock_name.erase(cli_sock);
+    }
 }
