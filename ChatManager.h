@@ -32,8 +32,8 @@ private:
 class chat_manager_t
 {
 public:
-    virtual void send_msg(int sid_, map<int,user_info_t>& user_info_, sock_info_t& sock_info_);
-    virtual void wait_cli_conn(map<int,user_info_t>& user_info_, sock_info_t& sock_info_);
+    virtual void send_msg(int sid_);
+    virtual void wait_cli_conn();
     inline static void group_send(map<int,user_info_t>& user_info_, const char* msg_);
 };
 

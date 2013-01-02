@@ -117,6 +117,7 @@ void *recv_ser(void *arg)
     else
     {
         cout << "disconnect with server" << endl;
+        exit(0);
     }
     pthread_exit((void *)0);
 }

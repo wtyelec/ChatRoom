@@ -41,13 +41,13 @@ int main(int argc, char* argv[])
                     {
                         if(FD_ISSET((*it).first, &g_fds))
                         {
-                            g_chat_manager.send_msg((*it).first, g_user_info, g_sock_info);
+                            g_chat_manager.send_msg((*it).first);
                         }
                     }
                 }
                 if(FD_ISSET(g_sock_info.get_ser_sock(), &g_fds))
                 {
-                    g_chat_manager.wait_cli_conn(g_user_info, g_sock_info);
+                    g_chat_manager.wait_cli_conn();
                 }
         }
     }
