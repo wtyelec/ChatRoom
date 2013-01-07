@@ -4,53 +4,43 @@
 
 using namespace std;
 
-void chat_manager_t::group_send(int sid_)
+void chat_manager_t::send_message(int sid_)
 {
     char buf_recv[1024];
     memset(buf_recv, 0, sizeof(buf_recv));
     if(recv(sid_, buf_recv, sizeof(buf_recv), 0) > 0)
     {
-        string msg = g_user_info[sid_].get_name(); 
-        cout << "recv data from " << msg << ": " << buf_recv << endl;
-        if(g_user_info.size() > 1)
+        char recevier[10];
+        char* msg_ptr;
+        msg_ptr = strchr(buf_recv, ':');
+        strncpy(recevier, buf_recv, msg_ptr - buf_recv);
+        recevier[msg_ptr - buf_recv] = '\0'; 
+        string sender = g_sock_name[sid_];
+        cout << "recv data from " << sender << ": " << msg_ptr + 1 << endl;
+
+        if(strcmp("all", recevier) == 0)
         {
-            msg = msg + ": " + buf_recv + " (in a chat room)";
-            map<int,user_info_t> tmp(g_user_info);
+            map<int,string> tmp(g_sock_name);
             tmp.erase(sid_);      
-            for(map<int,user_info_t>::iterator it = tmp.begin(); it != tmp.end(); it++)
+            for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
             {
-                send((*it).first, msg.c_str(), 30, 0);
+                sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
+                send((*it).first, sender.c_str(), 30, 0);
+            }
+        }
+        else
+        {
+            int recevier_sock = g_name_sock[recevier];
+            if(g_sock_name.size() > 1)
+            {
+                sender = sender + ": " + (msg_ptr + 1);
+                send(recevier_sock, sender.c_str(), 30, 0);
             }
         }
     }
     else
     {
-        cout << g_user_info[sid_].get_name() << " leave the chatroom." << endl;
-        g_user_info.erase(sid_);
-        g_name_sock.erase(g_sock_name[sid_]);
-        g_sock_name.erase(sid_);
-    }
-}
-
-void chat_manager_t::private_send(int sid_)
-{
-    char buf_recv[1024];
-    memset(buf_recv, 0, sizeof(buf_recv));
-    if(recv(sid_, buf_recv, sizeof(buf_recv), 0) > 0)
-    {
-        string msg = g_sock_name[sid_];
-        cout << "recv data from " << msg << ": " << buf_recv << endl;
-        int target_sock = g_name_sock[g_private_sock[sid_]]; 
-        if(g_private_sock.size() > 0)
-        {
-            msg = msg + ": " + buf_recv;
-            send(target_sock, msg.c_str(), 30, 0);
-        }
-    }
-    else
-    {
         cout << g_sock_name[sid_] << " offline" << endl;
-        g_private_sock.erase(sid_);
         g_name_sock.erase(g_sock_name[sid_]);
         g_sock_name.erase(sid_);
     }
@@ -71,30 +61,5 @@ void chat_manager_t::wait_cli_conn()
     {
         cout << "input name error" << endl;
         return;
-    }
-
-    char target_name[10];
-    if(recv(cli_sock, target_name, sizeof(target_name), 0) > 0)
-    {
-        if(strcmp("all",target_name) == 0)
-        {
-            user_info_t newUser;
-            newUser.set_name(conn_name);
-            g_user_info[cli_sock] = newUser;
-        }            
-        else
-        {
-            int target_id = (*g_name_sock.find(target_name)).second; 
-            if(target_id != 0)
-            {
-                g_private_sock[cli_sock] = target_name; 
-            }
-        }
-    }
-    else
-    {
-        cout << "input target error" << endl;
-        g_name_sock.erase(g_sock_name[cli_sock]);
-        g_sock_name.erase(cli_sock);
     }
 }

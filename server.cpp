@@ -9,8 +9,6 @@ struct timeval          g_timeout;
 sock_info_t             g_sock_info;
 map<string,int>         g_name_sock;
 map<int,string>         g_sock_name;
-map<int,user_info_t>    g_user_info;
-map<int,string>         g_private_sock;
 chat_manager_t          g_chat_manager;
 
 int main(int argc, char* argv[])
@@ -23,13 +21,8 @@ int main(int argc, char* argv[])
     {
         FD_ZERO(&g_fds);
         FD_SET(g_sock_info.get_ser_sock(), &g_fds);
-        for(map<int,user_info_t>::iterator it = g_user_info.begin(); it != g_user_info.end(); it++)
-        {
-            int sock = (*it).first;
-            FD_SET(sock, &g_fds);
-            fdp_max = fdp_max < sock ? sock:fdp_max;
-        }
-        for(map<int,string>::iterator it = g_private_sock.begin(); it != g_private_sock.end(); it++)
+
+        for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
         {
             int sock = (*it).first;
             FD_SET(sock, &g_fds);
@@ -44,23 +37,13 @@ int main(int argc, char* argv[])
             case 0:
                 break;
             default:
-                if(g_user_info.size() > 0)
+                if(g_sock_name.size() > 0)
                 {
-                    for(map<int,user_info_t>::iterator it = g_user_info.begin(); it != g_user_info.end(); it++)
+                    for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
                     {
                         if(FD_ISSET((*it).first, &g_fds))
                         {
-                            g_chat_manager.group_send((*it).first);
-                        }
-                    }
-                }
-                if(g_private_sock.size() > 0)
-                {
-                    for(map<int,string>::iterator it = g_private_sock.begin(); it != g_private_sock.end(); it++)
-                    {
-                        if(FD_ISSET((*it).first, &g_fds))
-                        {
-                            g_chat_manager.private_send((*it).first);
+                            g_chat_manager.send_message((*it).first);
                         }
                     }
                 }

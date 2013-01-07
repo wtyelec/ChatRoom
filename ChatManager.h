@@ -32,8 +32,7 @@ private:
 class chat_manager_t
 {
 public:
-    virtual void group_send(int sid_);
-    virtual void private_send(int sid_);
+    virtual void send_message(int sid_);
     virtual void wait_cli_conn();
 };
 

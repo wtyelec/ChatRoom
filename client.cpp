@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     get_ip_local();
     client_socket();	
     input_chat_name();
-    input_target_name();	
+    //input_target_name();	
     while(1)
     {
         pthread_create(&tid[0], &attr, recv_ser, NULL);
