@@ -1,6 +1,5 @@
 .gitignore
-*.out
-Generate
 *.swo
 *.swp
-Script
+script
+*.o
