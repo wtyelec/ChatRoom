@@ -5,19 +5,19 @@ using namespace std;
 
 void sock_info_t::init()
 {
-    m_ser.sin_family = AF_INET;
-    m_ser.sin_addr.s_addr = INADDR_ANY;
-    m_ser.sin_port = htons(6666);
-    m_ser_sock = socket(AF_INET, SOCK_STREAM, 0);
+    m_serv_addr.sin_family = AF_INET;
+    m_serv_addr.sin_addr.s_addr = INADDR_ANY;
+    m_serv_addr.sin_port = htons(6666);
+    m_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt =1;
-    setsockopt(m_ser_sock,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
-    bind(m_ser_sock, (struct sockaddr*)&m_ser, sizeof(m_ser));
-    listen(m_ser_sock, 5);
-    m_len = sizeof(m_cli);
+    setsockopt(m_listen_fd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
+    bind(m_listen_fd, (struct sockaddr*)&m_serv_addr, sizeof(m_serv_addr));
+    listen(m_listen_fd, 5);
+    m_len = sizeof(m_cli_addr);
     cout << "server init succeed" << endl;
 }
 
 int sock_info_t::accept_cli()
 {
-    return accept(m_ser_sock, (struct sockaddr *)&m_cli, &m_len);
+    return accept(m_listen_fd, (struct sockaddr *)&m_cli_addr, &m_len);
 }

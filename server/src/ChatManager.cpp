@@ -60,13 +60,13 @@ void chat_manager_t::send_message(int sid_)
 
 void chat_manager_t::wait_cli_conn()
 {
-    int cli_sock = g_sock_info.accept_cli();
+    int conn_fd = g_sock_info.accept_cli();
 
     char conn_name[10];
-    if(recv(cli_sock, conn_name, sizeof(conn_name), 0) > 0)
+    if(recv(conn_fd, conn_name, sizeof(conn_name), 0) > 0)
     {
-        g_sock_name[cli_sock] = conn_name;
-        g_name_sock[conn_name] = cli_sock;
+        g_sock_name[conn_fd] = conn_name;
+        g_name_sock[conn_name] = conn_fd;
         cout << "port:" << ntohs(g_sock_info.get_cli().sin_port) << " num:" << g_name_sock.size()  << endl;
     }
     else
