@@ -72,7 +72,7 @@ void client_socket()
 {
     ser.sin_family = AF_INET;
     ser.sin_port = htons(6666);
-    ser.sin_addr.s_addr = inet_addr(addrs_buf);
+    inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
     for(int i = 0; i < MAX_CONNECT_NUM; i++)
     {
         sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	

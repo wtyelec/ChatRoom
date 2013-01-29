@@ -55,6 +55,8 @@ void chat_manager_t::send_message(int sid_)
         cout << g_sock_name[sid_] << " offline" << endl;
         g_name_sock.erase(g_sock_name[sid_]);
         g_sock_name.erase(sid_);
+        close(sid_);
+        FD_CLR(sid_, &g_all_set);
     }
 }
 
@@ -68,6 +70,8 @@ void chat_manager_t::wait_cli_conn()
         g_sock_name[conn_fd] = conn_name;
         g_name_sock[conn_name] = conn_fd;
         cout << "port:" << ntohs(g_sock_info.get_cli().sin_port) << " num:" << g_name_sock.size()  << endl;
+        FD_SET(conn_fd, &g_all_set);
+        g_max_fd = g_max_fd < conn_fd ? conn_fd:g_max_fd;
     }
     else
     {
