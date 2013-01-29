@@ -12,24 +12,21 @@ int                 g_max_fd(0);
 
 int main(int argc, char* argv[])
 {
-    struct timeval          ticks;
-    chat_manager_t          chat_manager;
+    struct timeval      ticks;
+    chat_manager_t      chat_manager;
+    fd_set              cur_set;
 
     g_sock_info.init();
     g_max_fd = g_sock_info.get_ser_sock();
-    ticks.tv_sec = ticks.tv_usec = 0;
+    //ticks.tv_sec = ticks.tv_usec = 0;
+    FD_ZERO(&g_all_set);
+    FD_SET(g_sock_info.get_ser_sock(), &g_all_set); 
 
     while(1)
     {
-        FD_ZERO(&g_all_set);
-        FD_SET(g_sock_info.get_ser_sock(), &g_all_set); 
-        for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
-        {
-            int sock = (*it).first;
-            FD_SET(sock, &g_all_set);
-        }
+        cur_set = g_all_set;
 
-        switch(select(g_max_fd+1, &g_all_set, NULL, NULL, &ticks))
+        switch(select(g_max_fd+1, &cur_set, NULL, NULL, NULL))
         {
             case -1:
                 cout << "select error!" << endl;
@@ -41,13 +38,13 @@ int main(int argc, char* argv[])
                 {
                     for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
                     {
-                        if(FD_ISSET((*it).first, &g_all_set))
+                        if(FD_ISSET((*it).first, &cur_set))
                         {
                             chat_manager.send_message((*it).first);
                         }
                     }
                 }
-                if(FD_ISSET(g_sock_info.get_ser_sock(), &g_all_set))
+                if(FD_ISSET(g_sock_info.get_ser_sock(), &cur_set))
                 {
                     chat_manager.wait_cli_conn();
                 }
