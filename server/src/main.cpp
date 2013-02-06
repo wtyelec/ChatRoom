@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
                 if(g_sock_name.size() > 0)
                 {
                     for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
+                    //for(auto& it:g_sock_name)
                     {
                         if(FD_ISSET((*it).first, &cur_set))
                         {
@@ -46,7 +47,10 @@ int main(int argc, char* argv[])
                 }
                 if(FD_ISSET(g_sock_info.get_ser_sock(), &cur_set))
                 {
-                    chat_manager.wait_cli_conn();
+                    int conn_fd = g_sock_info.accept_cli();
+                    g_sock_name[conn_fd] = "";
+                    FD_SET(conn_fd, &g_all_set);
+                    g_max_fd = g_max_fd < conn_fd ? conn_fd:g_max_fd;
                 }
         }
     }

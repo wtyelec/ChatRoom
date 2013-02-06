@@ -19,5 +19,8 @@ void sock_info_t::init()
 
 int sock_info_t::accept_cli()
 {
-    return accept(m_listen_fd, (struct sockaddr *)&m_cli_addr, &m_len);
+    int conn_fd = accept(m_listen_fd, (struct sockaddr *)&m_cli_addr, &m_len);
+    //cout << "port:" << ntohs(get_cli().sin_port) << endl;
+
+    return conn_fd;
 }

@@ -21,7 +21,6 @@ void *recv_ser(void *arg);
 void *input_msg(void *arg);
 void client_socket();
 void input_chat_name();
-void input_target_name();
 void get_ip_local();
 void get_ip_config();
 
@@ -38,6 +37,7 @@ pthread_t   tid[2] = {0};
 pthread_mutex_t     mutex;
 pthread_attr_t      attr;
 struct  sockaddr_in ser;
+char name[10];
 
 int main(int argc, char* argv[])
 {
@@ -51,9 +51,8 @@ int main(int argc, char* argv[])
     memset(buf_recv, 0, sizeof(buf_recv));
     memset(buf_send, 0, sizeof(buf_send));
     get_ip_local();
-    client_socket();	
     input_chat_name();
-    //input_target_name();	
+    client_socket();	
     while(1)
     {
         pthread_create(&tid[0], &attr, recv_ser, NULL);
@@ -77,14 +76,12 @@ void client_socket()
     {
         sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
         connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
-        //send(sClient[i], "aa", sizeof("aa"),0);     // 测试多连接压力 
+        send(sClient[0], name, sizeof(name),0); 
     }
 }
 // 输入client用户名,发送到服务器
 void input_chat_name()
 {
-    char name[10];
-
     cout << "input name" << endl;
     while(cin >> name)
     {
@@ -98,27 +95,6 @@ void input_chat_name()
             continue;
         }
     }
-    send(sClient[0], name, sizeof(name),0); 
-}
-// 输入聊天对象名字,发送到服务器
-void input_target_name()
-{
-    char name[10];
-
-    cout << "input target" << endl;
-    while(cin >> name)
-    {
-        if(strlen(name) < 10)
-        {
-            break;
-        }
-        else 
-        {
-            cout << "name too long,input again" << endl;
-            continue;
-        }
-    }
-    send(sClient[0], name, sizeof(name),0); 
 }
 // 线程1:接受服务器发来消息
 void *recv_ser(void *arg)
