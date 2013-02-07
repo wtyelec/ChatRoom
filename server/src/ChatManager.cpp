@@ -5,6 +5,7 @@
 using namespace std;
 
 bool static recv_usr_name(int conn_fd_);
+void static clear_conn_fd(int conn_fd_);
 
 void chat_manager_t::send_message(int conn_fd_)
 {
@@ -61,12 +62,9 @@ void chat_manager_t::send_message(int conn_fd_)
     {
         cout << g_sock_name[conn_fd_] << " offline" << endl;
         g_name_sock.erase(g_sock_name[conn_fd_]);
-        g_sock_name.erase(conn_fd_);
-        close(conn_fd_);
-        FD_CLR(conn_fd_, &g_all_set);
-    }
+		clear_conn_fd(conn_fd_);
+	}
 }
-
 
 bool static recv_usr_name(int conn_fd_)
 {
@@ -81,7 +79,8 @@ bool static recv_usr_name(int conn_fd_)
         }
         else
         {
-            cout << "input name error" << endl;
+			cout << "connected but not input name" << endl;
+			clear_conn_fd(conn_fd_);
         }
         return true;
     }
@@ -89,4 +88,11 @@ bool static recv_usr_name(int conn_fd_)
     {
         return false;
     }
+}
+
+void static clear_conn_fd(int conn_fd_)
+{
+	g_sock_name.erase(conn_fd_);
+	close(conn_fd_);
+	FD_CLR(conn_fd_, &g_all_set);
 }

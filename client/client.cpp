@@ -154,7 +154,7 @@ void *input_msg(void *arg)
     /*
     sleep(sleep_sec);
     send(sClient[0], "xx", sizeof("xx"), 0);
-  */ 
+	*/ 
     pthread_create(&tid[1], &attr, input_msg, NULL);
     pthread_exit((void *)1);
 }
