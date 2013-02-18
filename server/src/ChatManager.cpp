@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ChatManager.h"
 #include "global.h"
 

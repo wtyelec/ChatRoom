@@ -32,7 +32,6 @@ public:
 
     virtual void init();   
     virtual int accept_cli();
-
 };
 
 #endif

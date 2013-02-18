@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
                 if(g_sock_name.size() > 0)
                 {
                     for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
-                    //for(auto& it:g_sock_name)
                     {
                         if(FD_ISSET((*it).first, &cur_set))
                         {

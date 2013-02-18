@@ -24,7 +24,6 @@ public:
     {
         m_name = name_;
     }
-
 private:
     string m_name;
 };
@@ -33,7 +32,6 @@ class chat_manager_t
 {
 public:
     virtual void send_message(int sid_);
-    //virtual void wait_cli_conn();
 };
 
 #endif

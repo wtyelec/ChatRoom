@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-// socket通信
+
 void client_socket()
 {
     ser.sin_family = AF_INET;
@@ -79,7 +79,7 @@ void client_socket()
         send(sClient[0], name, sizeof(name),0); 
     }
 }
-// 输入client用户名,发送到服务器
+
 void input_chat_name()
 {
     cout << "input name" << endl;
@@ -96,7 +96,7 @@ void input_chat_name()
         }
     }
 }
-// 线程1:接受服务器发来消息
+
 void *recv_ser(void *arg)
 {
     int recv_err = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
@@ -119,7 +119,7 @@ void *recv_ser(void *arg)
     }
     pthread_exit((void *)0);
 }
-// 线程2:输入聊天信息
+
 void *input_msg(void *arg)
 {
     while(cin >> buf_send)
@@ -135,12 +135,12 @@ void *input_msg(void *arg)
             flag_time = true;
         }
         dif = difftime(end, start);
-        if(dif > -2 && dif < 2)                 // 防止频繁输入
+        if(dif > -2 && dif < 2)						// forbid inputting frequently 
         {
             printf("input too fast! wait\n");
             break;
         }
-        else if(strlen(buf_send) >20)           // 防止过长输入
+        else if(strlen(buf_send) >20)				// forbid inputting too long message
         {
             printf("message too long! in 20\n");
             continue;
@@ -151,14 +151,10 @@ void *input_msg(void *arg)
             break;
         }
     }
-    /*
-    sleep(sleep_sec);
-    send(sClient[0], "xx", sizeof("xx"), 0);
-	*/ 
     pthread_create(&tid[1], &attr, input_msg, NULL);
     pthread_exit((void *)1);
 }
-// 遍历获取本地IP
+
 void get_ip_local() 
 {
     struct ifaddrs * ifAddrStruct=NULL;
@@ -170,7 +166,7 @@ void get_ip_local()
     {
         if (ifAddrStruct->ifa_addr->sa_family == AF_INET)
         {
-            if(strcmp(ifAddrStruct->ifa_name, "lo"))
+            if(strcmp(ifAddrStruct->ifa_name, "lo0"))
             {
                 tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
                 inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
@@ -180,7 +176,7 @@ void get_ip_local()
         ifAddrStruct=ifAddrStruct->ifa_next;
     }
 }
-// 从配置文件读取ip
+
 void get_ip_config()
 {
     ifstream fin("config.txt");  

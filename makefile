@@ -15,9 +15,9 @@ server : main.o SocketManager.o ChatManager.o main.o
 main.o : main.cpp SocketManager.h ChatManager.h
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 
-SocketManager.o : SocketManager.cpp SocketManager.h 
+SocketManager.o : SocketManager.cpp SocketManager.h global.h 
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
-
+	
 ChatManager.o : ChatManager.cpp ChatManager.h global.h
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 
