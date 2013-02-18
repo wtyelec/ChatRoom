@@ -8,30 +8,30 @@ using namespace std;
 
 class sock_info_t
 {
-private:
-    int         m_listen_fd;
-    socklen_t   m_len;
-    struct sockaddr_in m_serv_addr;
-    struct sockaddr_in m_cli_addr;
-public:
-    sock_info_t()
-    {
-        m_listen_fd = 0;
-        m_len = 0;
-    };
+	private:
+		int         m_listen_fd;
+		socklen_t   m_len;
+		struct sockaddr_in m_serv_addr;
+		struct sockaddr_in m_cli_addr;
+	public:
+		sock_info_t()
+		{
+			m_listen_fd = 0;
+			m_len = 0;
+		};
 
-    inline int get_ser_sock()
-    {
-        return m_listen_fd;
-    }
+		inline int get_ser_sock()
+		{
+			return m_listen_fd;
+		}
 
-    inline sockaddr_in get_cli()
-    {
-        return m_cli_addr;
-    }
+		inline sockaddr_in get_cli()
+		{
+			return m_cli_addr;
+		}
 
-    virtual void init();   
-    virtual int accept_cli();
+		virtual void init();   
+		virtual int accept_cli();
 };
 
 #endif

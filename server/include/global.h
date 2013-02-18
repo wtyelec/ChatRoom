@@ -14,13 +14,13 @@ extern int                  g_max_fd;
 
 class log
 {
-public:
-	inline static void log_current_time()
-	{
-		time_t rawtime;
-		time(&rawtime);
-		cout << "time: " << ctime(&rawtime);
-	}
+	public:
+		inline static void log_current_time()
+		{
+			time_t rawtime;
+			time(&rawtime);
+			cout << "time: " << ctime(&rawtime);
+		}
 };
 
 #endif

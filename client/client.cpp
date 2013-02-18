@@ -41,145 +41,145 @@ char name[10];
 
 int main(int argc, char* argv[])
 {
-    if(argc > 1)
-    {
-        sleep_sec = atoi(argv[1]);
-    }
-    pthread_mutex_init(&mutex,NULL);
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  
-    memset(buf_recv, 0, sizeof(buf_recv));
-    memset(buf_send, 0, sizeof(buf_send));
-    get_ip_local();
-    input_chat_name();
-    client_socket();	
-    while(1)
-    {
-        pthread_create(&tid[0], &attr, recv_ser, NULL);
-        pthread_create(&tid[1], &attr, input_msg, NULL);
-        while(1)
-        {
+	if(argc > 1)
+	{
+		sleep_sec = atoi(argv[1]);
+	}
+	pthread_mutex_init(&mutex,NULL);
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  
+	memset(buf_recv, 0, sizeof(buf_recv));
+	memset(buf_send, 0, sizeof(buf_send));
+	get_ip_local();
+	input_chat_name();
+	client_socket();	
+	while(1)
+	{
+		pthread_create(&tid[0], &attr, recv_ser, NULL);
+		pthread_create(&tid[1], &attr, input_msg, NULL);
+		while(1)
+		{
 
-        };
-    }
-    cout << "disconnect with server" << endl;
+		};
+	}
+	cout << "disconnect with server" << endl;
 
-    return 0;
+	return 0;
 }
 
 void client_socket()
 {
-    ser.sin_family = AF_INET;
-    ser.sin_port = htons(6666);
-    inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
-    for(int i = 0; i < MAX_CONNECT_NUM; i++)
-    {
-        sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
-        connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
-        send(sClient[0], name, sizeof(name),0); 
-    }
+	ser.sin_family = AF_INET;
+	ser.sin_port = htons(6666);
+	inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
+	for(int i = 0; i < MAX_CONNECT_NUM; i++)
+	{
+		sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
+		connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
+		send(sClient[0], name, sizeof(name),0); 
+	}
 }
 
 void input_chat_name()
 {
-    cout << "input name" << endl;
-    while(cin >> name)
-    {
-        if(strlen(name) < 10)
-        {
-            break;
-        }
-        else 
-        {
-            cout << "name too long,input again" << endl;
-            continue;
-        }
-    }
+	cout << "input name" << endl;
+	while(cin >> name)
+	{
+		if(strlen(name) < 10)
+		{
+			break;
+		}
+		else 
+		{
+			cout << "name too long,input again" << endl;
+			continue;
+		}
+	}
 }
 
 void *recv_ser(void *arg)
 {
-    int recv_err = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
-    if(recv_err > 0)
-    {
-        pthread_mutex_lock(&mutex);
-        if(buf_recv[0] != '\0')
-        {
-            printf("recv data from %s\n", buf_recv);
-        }
-        buf_recv[0] = '\0'; 
-        pthread_mutex_unlock(&mutex);
-        pthread_create(&tid[0], &attr, recv_ser, NULL);
-    }
-    else
-    {
-        cout << "disconnect with server" << endl;
-        close(sClient[0]);
-        exit(0);
-    }
-    pthread_exit((void *)0);
+	int recv_err = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
+	if(recv_err > 0)
+	{
+		pthread_mutex_lock(&mutex);
+		if(buf_recv[0] != '\0')
+		{
+			printf("recv data from %s\n", buf_recv);
+		}
+		buf_recv[0] = '\0'; 
+		pthread_mutex_unlock(&mutex);
+		pthread_create(&tid[0], &attr, recv_ser, NULL);
+	}
+	else
+	{
+		cout << "disconnect with server" << endl;
+		close(sClient[0]);
+		exit(0);
+	}
+	pthread_exit((void *)0);
 }
 
 void *input_msg(void *arg)
 {
-    while(cin >> buf_send)
-    {
-        if(flag_time)
-        {
-            time(&start);
-            flag_time = false;
-        }
-        else
-        {
-            time(&end);
-            flag_time = true;
-        }
-        dif = difftime(end, start);
-        if(dif > -2 && dif < 2)						// forbid inputting frequently 
-        {
-            printf("input too fast! wait\n");
-            break;
-        }
-        else if(strlen(buf_send) >20)				// forbid inputting too long message
-        {
-            printf("message too long! in 20\n");
-            continue;
-        }
-        else
-        {
-            send(sClient[0], buf_send, sizeof(buf_send), 0);
-            break;
-        }
-    }
-    pthread_create(&tid[1], &attr, input_msg, NULL);
-    pthread_exit((void *)1);
+	while(cin >> buf_send)
+	{
+		if(flag_time)
+		{
+			time(&start);
+			flag_time = false;
+		}
+		else
+		{
+			time(&end);
+			flag_time = true;
+		}
+		dif = difftime(end, start);
+		if(dif > -2 && dif < 2)						// forbid inputting frequently 
+		{
+			printf("input too fast! wait\n");
+			break;
+		}
+		else if(strlen(buf_send) >20)				// forbid inputting too long message
+		{
+			printf("message too long! in 20\n");
+			continue;
+		}
+		else
+		{
+			send(sClient[0], buf_send, sizeof(buf_send), 0);
+			break;
+		}
+	}
+	pthread_create(&tid[1], &attr, input_msg, NULL);
+	pthread_exit((void *)1);
 }
 
 void get_ip_local() 
 {
-    struct ifaddrs * ifAddrStruct=NULL;
-    void * tmpAddrPtr=NULL;
+	struct ifaddrs * ifAddrStruct=NULL;
+	void * tmpAddrPtr=NULL;
 
-    getifaddrs(&ifAddrStruct);
+	getifaddrs(&ifAddrStruct);
 
-    while (ifAddrStruct != NULL)
-    {
-        if (ifAddrStruct->ifa_addr->sa_family == AF_INET)
-        {
-            if(strcmp(ifAddrStruct->ifa_name, "lo0"))
-            {
-                tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
-                inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
-                printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
-            }
-        }
-        ifAddrStruct=ifAddrStruct->ifa_next;
-    }
+	while (ifAddrStruct != NULL)
+	{
+		if (ifAddrStruct->ifa_addr->sa_family == AF_INET)
+		{
+			if(strcmp(ifAddrStruct->ifa_name, "lo0"))
+			{
+				tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
+				inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
+				printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
+			}
+		}
+		ifAddrStruct=ifAddrStruct->ifa_next;
+	}
 }
 
 void get_ip_config()
 {
-    ifstream fin("config.txt");  
-    fin.getline(addrs_buf, 15);
-    cout << "Read from file: " << addrs_buf << endl; 
+	ifstream fin("config.txt");  
+	fin.getline(addrs_buf, 15);
+	cout << "Read from file: " << addrs_buf << endl; 
 }

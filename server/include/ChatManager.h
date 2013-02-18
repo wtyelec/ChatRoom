@@ -10,28 +10,28 @@ using namespace std;
 
 class user_info_t
 {
-public:
-    user_info_t()
-    {
-    }
+	public:
+		user_info_t()
+		{
+		}
 
-    inline string get_name()
-    {
-        return m_name;
-    }
+		inline string get_name()
+		{
+			return m_name;
+		}
 
-    inline void set_name(char* name_)
-    {
-        m_name = name_;
-    }
-private:
-    string m_name;
+		inline void set_name(char* name_)
+		{
+			m_name = name_;
+		}
+	private:
+		string m_name;
 };
 
 class chat_manager_t
 {
-public:
-    virtual void send_message(int sid_);
+	public:
+		virtual void send_message(int sid_);
 };
 
 #endif
