@@ -3,10 +3,10 @@
 
 using namespace std;
 
-bool static recv_usr_name(int conn_fd_);
-void static clear_conn_fd(int conn_fd_);
+uint8_t static recv_usr_name(int16_t conn_fd_);
+void static clear_conn_fd(int16_t conn_fd_);
 
-void chat_manager_t::send_message(int conn_fd_)
+void chat_manager_t::send_message(int16_t conn_fd_)
 {
 	if(recv_usr_name(conn_fd_))
 	{
@@ -32,9 +32,9 @@ void chat_manager_t::send_message(int conn_fd_)
 
 		if(strcmp("all", recevier) == 0)
 		{
-			map<int,string> tmp(g_sock_name);
+			map<int16_t,string> tmp(g_sock_name);
 			tmp.erase(conn_fd_);      
-			for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
+			for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
 			{
 				sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
 				send((*it).first, sender.c_str(), 30, 0);
@@ -42,7 +42,7 @@ void chat_manager_t::send_message(int conn_fd_)
 		}
 		else
 		{
-			int recevier_sock = (*g_name_sock.find(recevier)).second;
+			int16_t recevier_sock = (*g_name_sock.find(recevier)).second;
 			if(recevier_sock != 0)
 			{
 				if(g_sock_name.size() > 1)
@@ -65,7 +65,7 @@ void chat_manager_t::send_message(int conn_fd_)
 	}
 }
 
-bool static recv_usr_name(int conn_fd_)
+uint8_t static recv_usr_name(int16_t conn_fd_)
 {
 	if(g_sock_name[conn_fd_] == "") 
 	{
@@ -74,22 +74,21 @@ bool static recv_usr_name(int conn_fd_)
 		{
 			g_sock_name[conn_fd_] = conn_name;
 			g_name_sock[conn_name] = conn_fd_;
-			cout << "current connect fd = " << conn_fd_ << "; connected number = " << g_sock_name.size() << endl;
 		}
 		else
 		{
 			cout << "connected but not input name" << endl;
 			clear_conn_fd(conn_fd_);
 		}
-		return true;
+		return 1;
 	}
 	else
 	{
-		return false;
+		return 0;
 	}
 }
 
-void static clear_conn_fd(int conn_fd_)
+void static clear_conn_fd(int16_t conn_fd_)
 {
 	g_sock_name.erase(conn_fd_);
 	close(conn_fd_);

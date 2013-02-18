@@ -31,7 +31,7 @@ class user_info_t
 class chat_manager_t
 {
 	public:
-		virtual void send_message(int sid_);
+		virtual void send_message(int16_t sid_);
 };
 
 #endif
