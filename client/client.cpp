@@ -38,6 +38,7 @@ pthread_mutex_t     mutex;
 pthread_attr_t      attr;
 struct  sockaddr_in ser;
 char name[10];
+char name_feedback[50];
 
 int main(int argc, char* argv[])
 {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
 	memset(buf_recv, 0, sizeof(buf_recv));
 	memset(buf_send, 0, sizeof(buf_send));
 	get_ip_local();
-	input_chat_name();
+
 	client_socket();	
 	while(1)
 	{
@@ -63,8 +64,6 @@ int main(int argc, char* argv[])
 		};
 	}
 	cout << "disconnect with server" << endl;
-
-	return 0;
 }
 
 void client_socket()
@@ -76,7 +75,15 @@ void client_socket()
 	{
 		sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
 		connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
-		send(sClient[0], name, sizeof(name),0); 
+
+		do{
+			memset(name, 0, sizeof(name));
+			memset(name_feedback, 0, sizeof(name_feedback));
+			input_chat_name();
+			send(sClient[0], name, sizeof(name),0); 
+			recv(sClient[0], name_feedback, sizeof(name_feedback),0);
+			cout << name_feedback << endl;
+		}while(name_feedback[0] !=  'p');
 	}
 }
 
@@ -105,8 +112,9 @@ void *recv_ser(void *arg)
 		pthread_mutex_lock(&mutex);
 		if(buf_recv[0] != '\0')
 		{
-			printf("recv data from %s\n", buf_recv);
+			cout << buf_recv << endl;
 		}
+		memset(buf_recv, 0, sizeof(buf_recv));
 		buf_recv[0] = '\0'; 
 		pthread_mutex_unlock(&mutex);
 		pthread_create(&tid[0], &attr, recv_ser, NULL);

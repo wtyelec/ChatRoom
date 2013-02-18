@@ -8,27 +8,29 @@ void static clear_conn_fd(int16_t conn_fd_);
 
 void chat_manager_t::send_message(int16_t conn_fd_)
 {
-	if(recv_usr_name(conn_fd_))
+	if(recv_usr_name(conn_fd_) == 1)
 	{
 		return;
 	}
 
 	char buf_recv[1024];
 	memset(buf_recv, 0, sizeof(buf_recv));
-	if(recv(conn_fd_, buf_recv, sizeof(buf_recv), 0) > 0)
+	int16_t recv_len = recv(conn_fd_, buf_recv, sizeof(buf_recv), 0);
+	if(recv_len > 0)
 	{
 		char recevier[10];
 		char* msg_ptr;
 		msg_ptr = strchr(buf_recv, ':');
 		if(msg_ptr == NULL)
 		{
-			send(conn_fd_, "message form error", 18, 0);
+			char err_input_format[] = "input format wrong, please input correctly!"; 
+			send(conn_fd_, err_input_format, sizeof(err_input_format), 0);
 			return;
 		}
 		strncpy(recevier, buf_recv, msg_ptr - buf_recv);
 		recevier[msg_ptr - buf_recv] = '\0'; 
 		string sender = g_sock_name[conn_fd_];
-		cout << "recv data from " << sender << ": " << msg_ptr + 1 << endl;
+		cout << sender << ": " << msg_ptr + 1 << endl;
 
 		if(strcmp("all", recevier) == 0)
 		{
@@ -72,8 +74,18 @@ uint8_t static recv_usr_name(int16_t conn_fd_)
 		char conn_name[10];
 		if(recv(conn_fd_, conn_name, sizeof(conn_name), 0) > 0)
 		{
-			g_sock_name[conn_fd_] = conn_name;
-			g_name_sock[conn_name] = conn_fd_;
+			if(g_name_sock.find(conn_name) == g_name_sock.end())
+			{
+				g_sock_name[conn_fd_] = conn_name;
+				g_name_sock[conn_name] = conn_fd_;
+				char msg[] = "please start to chat!";
+				send(conn_fd_, msg, sizeof(msg), 0);
+			}
+			else
+			{
+				char err_same_name[] = "the name has used, please input another!";
+				send(conn_fd_, err_same_name, sizeof(err_same_name), 0); 
+			}
 		}
 		else
 		{
