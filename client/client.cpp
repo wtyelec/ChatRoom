@@ -9,13 +9,13 @@
 #include <arpa/inet.h>
 #include <ifaddrs.h>
 #include <netinet/in.h>
+#include <fcntl.h>
 #include <fstream>
 
 using namespace std;
 
 #define SEND_BUF_SIZE 1024
 #define RECV_BUF_SIZE 1024
-#define MAX_CONNECT_NUM 1
 
 void *recv_ser(void *arg);
 void *input_msg(void *arg);
@@ -23,12 +23,14 @@ void client_socket();
 void input_chat_name();
 void get_ip_local();
 void get_ip_config();
+void heartbeat_cli(int alarm_sec, int max_probes);
+void sig_alrm(int signo);
 
 char        addrs_buf[15];
 char        buf_recv[RECV_BUF_SIZE];
 char        buf_send[SEND_BUF_SIZE];
 bool        flag_time(false);
-int         sClient[MAX_CONNECT_NUM];
+int        	serv_fd(0); 
 int         sleep_sec(4);
 void        *tret;
 time_t      start,end;
@@ -39,6 +41,10 @@ pthread_attr_t      attr;
 struct  sockaddr_in ser;
 char name[10];
 char name_feedback[50];
+
+int alarm_sec(0);
+int max_probes(0);
+int cur_probes(0);
 
 int main(int argc, char* argv[])
 {
@@ -52,8 +58,9 @@ int main(int argc, char* argv[])
 	memset(buf_recv, 0, sizeof(buf_recv));
 	memset(buf_send, 0, sizeof(buf_send));
 	get_ip_local();
-
 	client_socket();	
+	heartbeat_cli(5, 2);
+	
 	while(1)
 	{
 		pthread_create(&tid[0], &attr, recv_ser, NULL);
@@ -66,25 +73,37 @@ int main(int argc, char* argv[])
 	cout << "disconnect with server" << endl;
 }
 
+void heartbeat_cli(int alarm_sec_, int max_probes_)
+{
+	alarm_sec = alarm_sec_;
+	max_probes = max_probes_;
+	cur_probes = 0;
+	signal(SIGALRM, sig_alrm);
+	alarm(alarm_sec);
+}	
+
+void sig_alrm(int signo)
+{
+	write(serv_fd, "heart:beat", sizeof("heart:beat"));	
+	alarm(alarm_sec);
+	return;
+}
+
 void client_socket()
 {
 	ser.sin_family = AF_INET;
 	ser.sin_port = htons(6666);
 	inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
-	for(int i = 0; i < MAX_CONNECT_NUM; i++)
-	{
-		sClient[i] = socket(AF_INET, SOCK_STREAM, 0);	
-		connect(sClient[i], (struct sockaddr *)&ser, sizeof(ser));   
-
-		do{
-			memset(name, 0, sizeof(name));
-			memset(name_feedback, 0, sizeof(name_feedback));
-			input_chat_name();
-			send(sClient[0], name, sizeof(name),0); 
-			recv(sClient[0], name_feedback, sizeof(name_feedback),0);
-			cout << name_feedback << endl;
-		}while(name_feedback[0] !=  'p');
-	}
+	serv_fd = socket(AF_INET, SOCK_STREAM, 0);	
+	connect(serv_fd, (struct sockaddr *)&ser, sizeof(ser));   
+	do{
+		memset(name, 0, sizeof(name));
+		memset(name_feedback, 0, sizeof(name_feedback));
+		input_chat_name();
+		write(serv_fd, name, sizeof(name)); 
+		read(serv_fd, name_feedback, sizeof(name_feedback));
+		cout << name_feedback << endl;
+	}while(name_feedback[0] !=  'p');
 }
 
 void input_chat_name()
@@ -106,13 +125,17 @@ void input_chat_name()
 
 void *recv_ser(void *arg)
 {
-	int recv_len = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
-	if(recv_len > 0)
+	int read_len = read(serv_fd, buf_recv, sizeof(buf_recv)); 
+	if(read_len > 0)
 	{
 		pthread_mutex_lock(&mutex);
-		if(buf_recv[0] != '\0')
+		if(!strcmp("heart:beat", buf_recv))
 		{
-			cout << buf_recv << endl;
+			//cout << "heart!" << endl;
+		}
+		else if(buf_recv[0] != '\0')
+		{
+			cout << "(recv) " << buf_recv << endl;
 		}
 		memset(buf_recv, 0, sizeof(buf_recv));
 		buf_recv[0] = '\0'; 
@@ -122,7 +145,7 @@ void *recv_ser(void *arg)
 	else
 	{
 		cout << "disconnect with server" << endl;
-		close(sClient[0]);
+		close(serv_fd);
 		exit(0);
 	}
 	pthread_exit((void *)0);
@@ -155,7 +178,7 @@ void *input_msg(void *arg)
 		}
 		else
 		{
-			send(sClient[0], buf_send, sizeof(buf_send), 0);
+			send(serv_fd, buf_send, sizeof(buf_send), 0);
 			break;
 		}
 	}

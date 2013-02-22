@@ -23,6 +23,9 @@ int16_t sock_info_t::accept_cli()
 	int16_t conn_fd = accept(m_listen_fd, (struct sockaddr *)&m_cli_addr, &m_len);
 	cout << "port:" << ntohs(get_cli().sin_port) << "; current connect fd = " << conn_fd << "; connected number = " << g_sock_name.size() + 1 << endl;
 	log::log_current_time();
+	g_sock_name[conn_fd] = "";
+	FD_SET(conn_fd, &g_all_set);
+	g_max_fd = g_max_fd < conn_fd ? conn_fd:g_max_fd;
 
 	return conn_fd;
 }
