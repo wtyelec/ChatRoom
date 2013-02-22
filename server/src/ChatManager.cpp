@@ -8,7 +8,7 @@ void static clear_conn_fd(int16_t conn_fd_);
 
 void chat_manager_t::send_message(int16_t conn_fd_)
 {
-	if(recv_usr_name(conn_fd_) == 1)
+	if(recv_usr_name(conn_fd_))
 	{
 		return;
 	}
@@ -72,7 +72,8 @@ uint8_t static recv_usr_name(int16_t conn_fd_)
 	if(g_sock_name[conn_fd_] == "") 
 	{
 		char conn_name[10];
-		if(recv(conn_fd_, conn_name, sizeof(conn_name), 0) > 0)
+		int recv_len = recv(conn_fd_, conn_name, sizeof(conn_name), 0);
+		if(recv_len > 0)
 		{
 			if(g_name_sock.find(conn_name) == g_name_sock.end())
 			{

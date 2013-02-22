@@ -106,8 +106,8 @@ void input_chat_name()
 
 void *recv_ser(void *arg)
 {
-	int recv_err = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
-	if(recv_err > 0)
+	int recv_len = recv(sClient[0], buf_recv, sizeof(buf_recv), 0);   
+	if(recv_len > 0)
 	{
 		pthread_mutex_lock(&mutex);
 		if(buf_recv[0] != '\0')
