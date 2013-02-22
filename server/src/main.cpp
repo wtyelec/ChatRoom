@@ -16,7 +16,6 @@ int main(int argc, char* argv[])
 	struct timeval      ticks;
 	chat_manager_t      chat_manager;
 	fd_set              cur_set;
-	fd_set				exc_set;
 
 	g_sock_info.init();
 	g_max_fd = g_sock_info.get_ser_sock();
@@ -28,9 +27,8 @@ int main(int argc, char* argv[])
 	while(1)
 	{
 		cur_set = g_all_set;
-		exc_set = g_all_set;
 
-		switch(select(g_max_fd+1, &cur_set, NULL, &exc_set, &ticks))
+		switch(select(g_max_fd+1, &cur_set, NULL, NULL, &ticks))
 		{
 			case -1:
 				cout << "select error!" << endl;
