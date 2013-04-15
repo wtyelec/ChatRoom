@@ -6,18 +6,24 @@ using namespace std;
 uint8_t static recv_usr_name(int16_t conn_fd_);
 void static clear_conn_fd(int16_t conn_fd_);
 
+#define RECV_BUF_SIZE 1024
+#define SEND_BUF_SIZE 1024
+
 void chat_manager_t::send_message(int16_t conn_fd_)
 {
+    cout << "send message begin" << endl;
 	if(recv_usr_name(conn_fd_))
 	{
+        cout << "someone enter chat room" << endl;
 		return;
 	}
 
-	char buf_recv[1024];
+	char buf_recv[RECV_BUF_SIZE];
 	memset(buf_recv, 0, sizeof(buf_recv));
 	int16_t recv_len = read(conn_fd_, buf_recv, sizeof(buf_recv));
 	if(recv_len > 0)
 	{
+        cout << "recv_len = " << recv_len << endl;
 		char recevier[10];
 		char* msg_ptr;
 		msg_ptr = strchr(buf_recv, ':');
@@ -25,6 +31,7 @@ void chat_manager_t::send_message(int16_t conn_fd_)
 		{
 			char err_input_format[] = "input format wrong, please input correctly!"; 
 			write(conn_fd_, err_input_format, sizeof(err_input_format));
+            cout << "recv wrong format message:" << buf_recv << endl;
 			return;
 		}
 		// analysis data
@@ -40,7 +47,7 @@ void chat_manager_t::send_message(int16_t conn_fd_)
 			for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
 			{
 				sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
-				write((*it).first, sender.c_str(), 30);
+				write((*it).first, sender.c_str(), SEND_BUF_SIZE);
 			}
 		}
 		else if(!strcmp("heart", recevier))
@@ -56,7 +63,7 @@ void chat_manager_t::send_message(int16_t conn_fd_)
 				if(g_sock_name.size() > 1)
 				{
 					sender = sender + ": " + (msg_ptr + 1);
-					write(recevier_sock, sender.c_str(), 30);
+					write(recevier_sock, sender.c_str(), SEND_BUF_SIZE);
 				}
 			}
 			else

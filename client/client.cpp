@@ -45,6 +45,7 @@ char name_feedback[50];
 int alarm_sec(0);
 int max_probes(0);
 int cur_probes(0);
+int recv_count(0);
 
 int main(int argc, char* argv[])
 {
@@ -135,7 +136,7 @@ void *recv_ser(void *arg)
 		}
 		else if(buf_recv[0] != '\0')
 		{
-			cout << "(recv) " << buf_recv << endl;
+			cout << "(recv) " << buf_recv << ".recv_count = " << ++recv_count << endl; 
 		}
 		memset(buf_recv, 0, sizeof(buf_recv));
 		buf_recv[0] = '\0'; 
@@ -199,9 +200,12 @@ void get_ip_local()
 		{
 			if(strcmp(ifAddrStruct->ifa_name, "lo0"))
 			{
-				tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
-				inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
-				printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
+				if(strcmp(ifAddrStruct->ifa_name, "en0"))
+				{	
+					tmpAddrPtr=&((struct sockaddr_in *)ifAddrStruct->ifa_addr)->sin_addr;
+					inet_ntop(AF_INET, tmpAddrPtr, addrs_buf, INET_ADDRSTRLEN);
+					printf("%s IP Address %s\n", ifAddrStruct->ifa_name, addrs_buf);
+				}
 			}
 		}
 		ifAddrStruct=ifAddrStruct->ifa_next;
