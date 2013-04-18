@@ -14,8 +14,8 @@
 
 using namespace std;
 
-#define SEND_BUF_SIZE 1024
-#define RECV_BUF_SIZE 1024
+#define WRITE_BUF_SIZE 1024
+#define READ_BUF_SIZE 1024
 
 void *recv_ser(void *arg);
 void *input_msg(void *arg);
@@ -27,8 +27,8 @@ void heartbeat_cli(int alarm_sec, int max_probes);
 void sig_alrm(int signo);
 
 char        addrs_buf[15];
-char        buf_recv[RECV_BUF_SIZE];
-char        buf_send[SEND_BUF_SIZE];
+char        buf_recv[READ_BUF_SIZE];
+char        buf_send[WRITE_BUF_SIZE];
 bool        flag_time(false);
 int        	serv_fd(0); 
 int         sleep_sec(4);
@@ -39,7 +39,7 @@ pthread_t   tid[2] = {0};
 pthread_mutex_t     mutex;
 pthread_attr_t      attr;
 struct  sockaddr_in ser;
-char name[10];
+string name;
 char name_feedback[50];
 
 int alarm_sec(0);
@@ -98,10 +98,9 @@ void client_socket()
 	serv_fd = socket(AF_INET, SOCK_STREAM, 0);	
 	connect(serv_fd, (struct sockaddr *)&ser, sizeof(ser));   
 	do{
-		memset(name, 0, sizeof(name));
 		memset(name_feedback, 0, sizeof(name_feedback));
 		input_chat_name();
-		write(serv_fd, name, sizeof(name)); 
+		write(serv_fd, name.data(), sizeof(name.data())); 
 		read(serv_fd, name_feedback, sizeof(name_feedback));
 		cout << name_feedback << endl;
 	}while(name_feedback[0] !=  'p');
@@ -112,8 +111,9 @@ void input_chat_name()
 	cout << "input name" << endl;
 	while(cin >> name)
 	{
-		if(strlen(name) < 10)
+		if(name.size() < 10)
 		{
+            cout << "name.size = " << name.size() << endl;
 			break;
 		}
 		else 
@@ -179,7 +179,7 @@ void *input_msg(void *arg)
 		}
 		else
 		{
-			send(serv_fd, buf_send, sizeof(buf_send), 0);
+			write(serv_fd, buf_send, sizeof(buf_send));
 			break;
 		}
 	}

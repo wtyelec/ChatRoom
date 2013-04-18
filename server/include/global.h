@@ -1,7 +1,8 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
 #include <iostream>
+#include <string>
 #include <map>
 #include <stdio.h>
 #include <time.h>
@@ -21,6 +22,25 @@ class log
 			time(&ticks);
 			cout << "time: " << ctime(&ticks);
 		}
+};
+
+enum chat_type
+{
+    NAME = 1,
+    ALL = 2,
+    PRIVATE = 3 
+};
+
+struct net_packet_head
+{
+    int       body_size;
+    chat_type m_chat_type;
+};
+
+struct net_packet
+{
+    net_packet_head head;
+    char*           body;
 };
 
 #endif
