@@ -15,7 +15,7 @@ enum chat_type
 
 struct net_packet_head
 {
-    int         body_size;
+    int16_t     body_size;
     chat_type   m_chat_type;
 };
 
