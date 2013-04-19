@@ -55,11 +55,10 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                 tmp.erase(conn_fd_);      
                 for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
                 {
-                    sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
-                    //write((*it).first, sender.c_str(), WRITE_BUF_SIZE);
+                    sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)\0";
                     net_packet write_packet;
-                    write_packet.body = buf_body;
-                    write_packet.head.body_size = read_packet.head.body_size;
+                    write_packet.body = sender.data();
+                    write_packet.head.body_size = sender.size();
                     write((*it).first, (char*)&write_packet.head, sizeof(net_packet_head));
                     write((*it).first, write_packet.body, write_packet.head.body_size);
                 }

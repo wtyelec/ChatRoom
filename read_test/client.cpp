@@ -97,11 +97,11 @@ void recv_ser()
         read_body_ret = read(sClient[0], buf_body, packet.head.body_size);
         if(read_body_ret > 0)
         {
-            if(buf_head[0] != '\0')
+            if(buf_body[0] != '\0')
             {
                 cout << buf_body << ". recv_count = " << ++recv_count << endl;
             }
-            buf_head[0] = '\0'; 
+            buf_body[0] = '\0'; 
         }
     }
 

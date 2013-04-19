@@ -50,19 +50,12 @@ int main(int argc, char* argv[])
     input_chat_name();
     for(int i = 0; i < TEST_SEND_NUM; i++)
     {
-        /*
-        char cout_buf[64];
-        snprintf(cout_buf, sizeof(cout_buf), "%d", i);
-        strcpy(buf_send, "all:");
-        strcat(buf_send, cout_buf);
-        */
         net_packet packet;
         char send_buf[] = "all:abcdefga";
-        packet.body = send_buf;//send_buf;
+        packet.body = send_buf;
         packet.head.m_chat_type = ALL;
         packet.head.body_size = sizeof(send_buf);
         int write_ret = write(sClient[0], (char*)&packet.head, sizeof(net_packet_head));
-        //cout << "write_ret = " << write_ret << endl;
         write(sClient[0], packet.body, packet.head.body_size);
         cout << "send_content = " << packet.body << " i = " << i + 1 << endl;
     }

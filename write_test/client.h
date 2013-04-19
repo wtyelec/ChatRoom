@@ -22,7 +22,7 @@ struct net_packet_head
 struct net_packet
 {
     net_packet_head head;
-    char*           body;
+    const char*     body;
 };
 
 #endif

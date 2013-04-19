@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 #include <fstream>
+#include "client.h"
 
 using namespace std;
 
@@ -60,7 +61,8 @@ int main(int argc, char* argv[])
 	memset(buf_send, 0, sizeof(buf_send));
 	get_ip_local();
 	client_socket();	
-	heartbeat_cli(5, 2);
+    input_chat_name();
+	//heartbeat_cli(5, 2);
 	
 	while(1)
 	{
@@ -97,6 +99,7 @@ void client_socket()
 	inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
 	serv_fd = socket(AF_INET, SOCK_STREAM, 0);	
 	connect(serv_fd, (struct sockaddr *)&ser, sizeof(ser));   
+    /*
 	do{
 		memset(name_feedback, 0, sizeof(name_feedback));
 		input_chat_name();
@@ -104,6 +107,7 @@ void client_socket()
 		read(serv_fd, name_feedback, sizeof(name_feedback));
 		cout << name_feedback << endl;
 	}while(name_feedback[0] !=  'p');
+    */
 }
 
 void input_chat_name()
@@ -113,7 +117,6 @@ void input_chat_name()
 	{
 		if(name.size() < 10)
 		{
-            cout << "name.size = " << name.size() << endl;
 			break;
 		}
 		else 
@@ -122,33 +125,41 @@ void input_chat_name()
 			continue;
 		}
 	}
+    write(serv_fd, name.data(), name.size());
 }
 
 void *recv_ser(void *arg)
 {
-	int read_len = read(serv_fd, buf_recv, sizeof(buf_recv)); 
-	if(read_len > 0)
+    // read net_packet_head
+	char buf_head[sizeof(net_packet_head)];
+	memset(buf_head, 0, sizeof(buf_head));
+	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+    int16_t read_body_ret(0);
+	if(read_head_ret > 0)
 	{
-		pthread_mutex_lock(&mutex);
-		if(!strcmp("heart:beat", buf_recv))
-		{
-			//cout << "heart!" << endl;
-		}
-		else if(buf_recv[0] != '\0')
-		{
-			cout << "(recv) " << buf_recv << ".recv_count = " << ++recv_count << endl; 
-		}
-		memset(buf_recv, 0, sizeof(buf_recv));
-		buf_recv[0] = '\0'; 
-		pthread_mutex_unlock(&mutex);
-		pthread_create(&tid[0], &attr, recv_ser, NULL);
-	}
-	else
-	{
-		cout << "disconnect with server" << endl;
-		close(serv_fd);
-		exit(0);
-	}
+        pthread_mutex_lock(&mutex);
+        net_packet packet;
+        packet.head = *(net_packet_head*)buf_head;
+        // read net_packet_body
+        char buf_body[packet.head.body_size];
+        memset(buf_body, 0, sizeof(buf_body));
+        read_body_ret = read(serv_fd, buf_body, packet.head.body_size);
+        {
+            if(buf_body[0] != '\0')
+            {
+                cout << buf_body << ". recv_count = " << ++recv_count << endl;
+            }
+            buf_body[0] = '\0'; 
+            pthread_mutex_unlock(&mutex);
+            pthread_create(&tid[0], &attr, recv_ser, NULL);
+        }
+    }
+    if(read_head_ret <= 0 || read_body_ret <=0)
+    {
+        cout << "disconnect with server" << endl;
+        close(serv_fd);
+        exit(0);
+    }
 	pthread_exit((void *)0);
 }
 
@@ -179,7 +190,11 @@ void *input_msg(void *arg)
 		}
 		else
 		{
-			write(serv_fd, buf_send, sizeof(buf_send));
+            net_packet packet;
+            packet.body = buf_send;
+            packet.head.body_size = sizeof(buf_send);
+			write(serv_fd, (char*)&packet.head, sizeof(net_packet_head));
+            write(serv_fd, packet.body, packet.head.body_size);
 			break;
 		}
 	}
