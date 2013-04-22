@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 		{
 			case -1:
 				cout << "select error!" << endl;
-				break;
+			    return 0;	
 			case 0:
 				break;
 			default:

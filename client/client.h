@@ -19,10 +19,17 @@ struct net_packet_head
     chat_type   m_chat_type;
 };
 
+struct net_packet_body
+{
+    int16_t         recv_id;
+    char receiver[4];
+    char message[20];
+};
+
 struct net_packet
 {
     net_packet_head head;
-    const char*     body;
+    net_packet_body body;
 };
 
 #endif

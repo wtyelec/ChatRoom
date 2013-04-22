@@ -15,7 +15,6 @@
 
 using namespace std;
 
-#define WRITE_BUF_SIZE 1024
 #define READ_BUF_SIZE 1024
 
 void *recv_ser(void *arg);
@@ -26,10 +25,12 @@ void get_ip_local();
 void get_ip_config();
 void heartbeat_cli(int alarm_sec, int max_probes);
 void sig_alrm(int signo);
+//int16_t packet_write(int16_t write_fd_, net_packet_body* body_, int16_t body_size_);
+int16_t packet_write(int16_t write_fd_, const char* body_, int16_t body_size_);
+int16_t packet_read(int16_t read_fd_, char* &buf_send);
 
 char        addrs_buf[15];
 char        buf_recv[READ_BUF_SIZE];
-char        buf_send[WRITE_BUF_SIZE];
 bool        flag_time(false);
 int        	serv_fd(0); 
 int         sleep_sec(4);
@@ -58,7 +59,6 @@ int main(int argc, char* argv[])
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);  
 	memset(buf_recv, 0, sizeof(buf_recv));
-	memset(buf_send, 0, sizeof(buf_send));
 	get_ip_local();
 	client_socket();	
     input_chat_name();
@@ -87,7 +87,7 @@ void heartbeat_cli(int alarm_sec_, int max_probes_)
 
 void sig_alrm(int signo)
 {
-	write(serv_fd, "heart:beat", sizeof("heart:beat"));	
+	//packet_write(serv_fd, "heart:beat", sizeof("heart:beat"));	
 	alarm(alarm_sec);
 	return;
 }
@@ -128,31 +128,21 @@ void input_chat_name()
     write(serv_fd, name.data(), name.size());
 }
 
-void *recv_ser(void *arg)
+int16_t packet_read(int16_t read_fd_, char* &buf_read)
 {
     // read net_packet_head
 	char buf_head[sizeof(net_packet_head)];
 	memset(buf_head, 0, sizeof(buf_head));
 	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0);
+    int16_t read_body_ret(0); 
 	if(read_head_ret > 0)
 	{
-        pthread_mutex_lock(&mutex);
         net_packet packet;
         packet.head = *(net_packet_head*)buf_head;
         // read net_packet_body
-        char buf_body[packet.head.body_size];
-        memset(buf_body, 0, sizeof(buf_body));
-        read_body_ret = read(serv_fd, buf_body, packet.head.body_size);
-        {
-            if(buf_body[0] != '\0')
-            {
-                cout << buf_body << ". recv_count = " << ++recv_count << endl;
-            }
-            buf_body[0] = '\0'; 
-            pthread_mutex_unlock(&mutex);
-            pthread_create(&tid[0], &attr, recv_ser, NULL);
-        }
+        int16_t read_body_ret = read(serv_fd, buf_read, packet.head.body_size);
+
+        return read_body_ret;
     }
     if(read_head_ret <= 0 || read_body_ret <=0)
     {
@@ -160,11 +150,32 @@ void *recv_ser(void *arg)
         close(serv_fd);
         exit(0);
     }
+
+    return read_head_ret;
+}
+
+int16_t packet_write(int16_t write_fd_, const char* body_, int16_t body_size_)
+//int16_t packet_write(int16_t write_fd_, net_packet_body* body_, int16_t body_size_)
+{
+    net_packet write_packet;
+    write_packet.head.body_size = body_size_;
+    write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
+    int16_t write_ret = write(write_fd_, body_, body_size_);
+    return write_ret;
+}
+
+void *recv_ser(void *arg)
+{
+    char* buf_read;
+    packet_read(serv_fd, buf_read);
+    cout << buf_read << endl;
+    pthread_create(&tid[0], &attr, recv_ser, NULL);
 	pthread_exit((void *)0);
 }
 
 void *input_msg(void *arg)
 {
+    string buf_send;
 	while(cin >> buf_send)
 	{
 		if(flag_time)
@@ -183,18 +194,30 @@ void *input_msg(void *arg)
 			printf("input too fast! wait\n");
 			break;
 		}
-		else if(strlen(buf_send) >20)				// forbid inputting too long message
+		else if(buf_send.size() > 20)				// forbid inputting too long message
 		{
 			printf("message too long! in 20\n");
 			continue;
 		}
 		else
 		{
-            net_packet packet;
-            packet.body = buf_send;
-            packet.head.body_size = sizeof(buf_send);
-			write(serv_fd, (char*)&packet.head, sizeof(net_packet_head));
-            write(serv_fd, packet.body, packet.head.body_size);
+            net_packet_body packet_body;
+            strcpy(packet_body.receiver, "all");
+            //packet_body.receiver= "all";
+            //unsigned char[] test_byte = System.Text.Encoding.Default.GetBytes("all");
+            //packet_body.receiver = test_byte; 
+            //packet_body.message = buf_send.data();
+            /*
+            packet_body.recv_id = 3;
+            cout << "recv_if:" << packet_body.recv_id << endl;
+            cout << "receiver:" << packet_body.receiver << endl;
+            cout << "message:" << packet_body.message << endl;
+            char write_buf[sizeof("all") + buf_send.size() + 1];
+            memset(write_buf, 0, sizeof(write_buf));
+            memcpy(write_buf, &packet_body, sizeof(packet_body));
+            */
+            int16_t write_ret = packet_write(serv_fd, buf_send.data(), buf_send.size());
+            //cout << "write_ret = " << write_ret << endl;
 			break;
 		}
 	}
