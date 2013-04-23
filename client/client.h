@@ -6,17 +6,18 @@
 
 using namespace std;
 
-enum chat_type 
+enum packet_type 
 {
     NAME = 1,
-    ALL = 2,
-    PRIVATE = 3 
+    HEART,
+    ALL,
+    PRIVATE
 };
 
 struct net_packet_head
 {
     int16_t     body_size;
-    chat_type   m_chat_type;
+    packet_type m_packet_type;
 };
 
 struct net_packet_body

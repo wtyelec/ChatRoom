@@ -3,9 +3,9 @@
 
 using namespace std;
 
-uint8_t static recv_usr_name(int16_t conn_fd_);
+void static recv_usr_name(int16_t conn_fd_, const char* name_);
 void static clear_conn_fd(int16_t conn_fd_);
-void static packet_write(int16_t write_fd_, const char* body_, int16_t body_size_);
+int16_t static packet_write(int16_t write_fd_, string& body_);
 
 #define READ_BUF_SIZE 1024
 #define WRITE_BUF_SIZE 1024
@@ -14,81 +14,74 @@ int16_t read_count(0);
 
 void chat_manager_t::send_message(int16_t conn_fd_)
 {
-	if(recv_usr_name(conn_fd_))
-	{
-        cout << g_sock_name[conn_fd_] << " enter chat room" << endl;
-		return;
-	}
     // read net_packet_head
-	char buf_head[sizeof(net_packet_head)];
-	memset(buf_head, 0, sizeof(buf_head));
-	int16_t read_head_ret = read(conn_fd_, buf_head, sizeof(buf_head));
+    char buf_head[sizeof(net_packet_head)];
+    memset(buf_head, 0, sizeof(buf_head));
+    int16_t read_head_ret = read(conn_fd_, buf_head, sizeof(buf_head));
     int16_t read_body_ret(0);
-	if(read_head_ret > 0)
-	{
+    if(read_head_ret > 0)
+    {
         net_packet read_packet;
         read_packet.head = *(net_packet_head*)buf_head;
+        cout << "type: " << read_packet.head.m_packet_type << endl;
         // read net_packet_body
         char buf_body[read_packet.head.body_size];
         memset(buf_body, 0, sizeof(buf_body));
         read_body_ret = read(conn_fd_, buf_body, read_packet.head.body_size);
         if(read_body_ret > 0)
         {
-            /*
-            cout << "read_body_ret: " << read_body_ret << endl;
-            net_packet_body packet_body;
-            memcpy(&packet_body, buf_body, sizeof(buf_body));
-            //packet_body = *(net_packet_body*)buf_body;
-            cout << "cout begin" << endl;
-            cout << "recv_id: " << packet_body.recv_id << endl;
-            cout << "receiver: " << packet_body.receiver << endl;
-            cout << "message: " << packet_body.message << endl;
-            */
-            char receiver[11];
-            char* msg_ptr;
-            msg_ptr = strchr(buf_body, ':');
-            if(msg_ptr == NULL)
+            if(read_packet.head.m_packet_type == NAME)
             {
-                char err_input_format[] = "input format wrong, please input correctly!"; 
-                packet_write(conn_fd_, err_input_format, sizeof(err_input_format));
-                cout << "recv wrong format message:" << buf_body << endl;
-                return;
-            }
-            // analysis data
-            strncpy(receiver, buf_body, msg_ptr - buf_body);
-            receiver[msg_ptr - buf_body] = '\0'; 
-            string sender = g_sock_name[conn_fd_];
-
-            if(!strcmp("all", receiver))
-            {
-                //net_packet_body packet_body;
-
-                //packet_body.receiver = receiver; 
-                sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
-                cout << sender << endl; 
-                map<int16_t,string> tmp(g_sock_name);
-                tmp.erase(conn_fd_);    // remove sender fd   
-                for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
-                {
-                    packet_write((*it).first, sender.data(), sender.size() + 1);
-                }
-            }
-            else if(!strcmp("heart", receiver))
-            {
-                packet_write(conn_fd_, "heart:beat", sizeof("heart:beat"));
+                recv_usr_name(conn_fd_, buf_body);
+                cout << g_sock_name[conn_fd_] << " enter chat room" << endl;
             }
             else
             {
-                sender = sender + ": " + (msg_ptr + 1) + "(private)"; 
-                cout << sender << endl; 
-                int16_t write_fd = (*g_name_sock.find(receiver)).second;
-                if(write_fd != 0)
+                char receiver[11];
+                char* msg_ptr;
+                msg_ptr = strchr(buf_body, ':');
+                if(msg_ptr == NULL)
                 {
-                    packet_write(write_fd, sender.data(), sender.size() + 1);
+                    string err_input_format = "input format wrong, please input correctly!"; 
+                    packet_write(conn_fd_, err_input_format);
+                    cout << "recv wrong format message:" << buf_body << endl;
+                    return;
                 }
-                else
+                // analysis data
+                strncpy(receiver, buf_body, msg_ptr - buf_body);
+                receiver[msg_ptr - buf_body] = '\0'; 
+                string sender = g_sock_name[conn_fd_];
+
+                if(read_packet.head.m_packet_type == ALL)
                 {
-                    packet_write(conn_fd_, "target not exist", sizeof("target not exist"));
+                    sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
+                    cout << sender << endl; 
+                    map<int16_t,string> tmp(g_sock_name);
+                    tmp.erase(conn_fd_);    // remove sender fd   
+                    for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
+                    {
+                        packet_write((*it).first, sender);
+                    }
+                }
+                else if(read_packet.head.m_packet_type == HEART)
+                {
+                    string heart_beat = "heart:beat";
+                    packet_write(conn_fd_, heart_beat);
+                }
+                else if(read_packet.head.m_packet_type == PRIVATE)
+                {
+                    sender = sender + ": " + (msg_ptr + 1) + "(private)"; 
+                    cout << sender << endl; 
+                    int16_t write_fd = (*g_name_sock.find(receiver)).second;
+                    if(write_fd != 0)
+                    {
+                        packet_write(write_fd, sender);
+                    }
+                    else
+                    {
+                        string target_not_exist = "target not exist"; 
+                        packet_write(conn_fd_, target_not_exist); 
+                    }
                 }
             }
         }
@@ -101,48 +94,30 @@ void chat_manager_t::send_message(int16_t conn_fd_)
     }
 }
 
-void static packet_write(int16_t write_fd_, const char* body_, int16_t body_size_)
+int16_t static packet_write(int16_t write_fd_, string& body_)
 {
     net_packet write_packet;
-    write_packet.head.body_size = body_size_;
+    write_packet.head.body_size = body_.size() + 1;
     write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
-    write(write_fd_, body_, body_size_);
+    int16_t body_ret = write(write_fd_, body_.data(), body_.size() + 1);
+
+    return body_ret;
 }
 
-uint8_t static recv_usr_name(int16_t conn_fd_)
+void static recv_usr_name(int16_t conn_fd_, const char* name_)
 {
-    if(g_sock_name[conn_fd_] == "") 
+    if(g_name_sock.find(name_) == g_name_sock.end())
     {
-        char conn_name[10];
-        int read_ret = read(conn_fd_, conn_name, sizeof(conn_name));
-        if(read_ret > 0)
-        {
-            if(g_name_sock.find(conn_name) == g_name_sock.end())
-            {
-                g_sock_name[conn_fd_] = conn_name;
-                g_name_sock[conn_name] = conn_fd_;
-                char msg[] = "Please start to chat!";
-                packet_write(conn_fd_, msg, sizeof(msg));
-            }
-            else
-            {
-                char err_same_name[] = "The name has used, please input another!";
-                packet_write(conn_fd_, err_same_name, sizeof(err_same_name));
-                return 0;
-            }
-        }
-        else
-        {
-            cout << "connected but not input name" << endl;
-            clear_conn_fd(conn_fd_);
-        }
-        return 1;
+        g_sock_name[conn_fd_] = name_;
+        g_name_sock[name_] = conn_fd_;
+        string msg = "Please start to chat!";
+        packet_write(conn_fd_, msg);
     }
     else
     {
-        return 0;
+        string err_same_name = "The name has used, please input another!";
+        packet_write(conn_fd_, err_same_name);
     }
-    cout << "recv_usr_name end" << endl;
 }
 
 void static clear_conn_fd(int16_t conn_fd_)
