@@ -11,7 +11,8 @@ enum packet_type
     NAME = 1,
     HEART,
     ALL,
-    PRIVATE
+    PRIVATE,
+    EXCEPTION 
 };
 
 struct net_packet_head

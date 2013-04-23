@@ -5,7 +5,7 @@ using namespace std;
 
 void static recv_usr_name(int16_t conn_fd_, const char* name_);
 void static clear_conn_fd(int16_t conn_fd_);
-int16_t static packet_write(int16_t write_fd_, string& body_);
+int16_t static packet_write(int16_t write_fd_, string& body_, packet_type type_);
 
 #define READ_BUF_SIZE 1024
 #define WRITE_BUF_SIZE 1024
@@ -23,7 +23,6 @@ void chat_manager_t::send_message(int16_t conn_fd_)
     {
         net_packet read_packet;
         read_packet.head = *(net_packet_head*)buf_head;
-        cout << "type: " << read_packet.head.m_packet_type << endl;
         // read net_packet_body
         char buf_body[read_packet.head.body_size];
         memset(buf_body, 0, sizeof(buf_body));
@@ -33,7 +32,6 @@ void chat_manager_t::send_message(int16_t conn_fd_)
             if(read_packet.head.m_packet_type == NAME)
             {
                 recv_usr_name(conn_fd_, buf_body);
-                cout << g_sock_name[conn_fd_] << " enter chat room" << endl;
             }
             else
             {
@@ -43,7 +41,7 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                 if(msg_ptr == NULL)
                 {
                     string err_input_format = "input format wrong, please input correctly!"; 
-                    packet_write(conn_fd_, err_input_format);
+                    packet_write(conn_fd_, err_input_format, EXCEPTION);
                     cout << "recv wrong format message:" << buf_body << endl;
                     return;
                 }
@@ -55,18 +53,18 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                 if(read_packet.head.m_packet_type == ALL)
                 {
                     sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
-                    cout << sender << endl; 
+                    cout << sender << "count: " << read_count++ << endl; 
                     map<int16_t,string> tmp(g_sock_name);
                     tmp.erase(conn_fd_);    // remove sender fd   
                     for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
                     {
-                        packet_write((*it).first, sender);
+                        packet_write((*it).first, sender, ALL);
                     }
                 }
                 else if(read_packet.head.m_packet_type == HEART)
                 {
                     string heart_beat = "heart:beat";
-                    packet_write(conn_fd_, heart_beat);
+                    packet_write(conn_fd_, heart_beat, HEART);
                 }
                 else if(read_packet.head.m_packet_type == PRIVATE)
                 {
@@ -75,12 +73,12 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                     int16_t write_fd = (*g_name_sock.find(receiver)).second;
                     if(write_fd != 0)
                     {
-                        packet_write(write_fd, sender);
+                        packet_write(write_fd, sender, PRIVATE);
                     }
                     else
                     {
                         string target_not_exist = "target not exist"; 
-                        packet_write(conn_fd_, target_not_exist); 
+                        packet_write(conn_fd_, target_not_exist, EXCEPTION); 
                     }
                 }
             }
@@ -94,10 +92,11 @@ void chat_manager_t::send_message(int16_t conn_fd_)
     }
 }
 
-int16_t static packet_write(int16_t write_fd_, string& body_)
+int16_t static packet_write(int16_t write_fd_, string& body_, packet_type type_)
 {
     net_packet write_packet;
     write_packet.head.body_size = body_.size() + 1;
+    write_packet.head.m_packet_type = type_;
     write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
     int16_t body_ret = write(write_fd_, body_.data(), body_.size() + 1);
 
@@ -111,12 +110,13 @@ void static recv_usr_name(int16_t conn_fd_, const char* name_)
         g_sock_name[conn_fd_] = name_;
         g_name_sock[name_] = conn_fd_;
         string msg = "Please start to chat!";
-        packet_write(conn_fd_, msg);
+        packet_write(conn_fd_, msg, ALL);
+        cout << g_sock_name[conn_fd_] << " enter chat room" << endl;
     }
     else
     {
         string err_same_name = "The name has used, please input another!";
-        packet_write(conn_fd_, err_same_name);
+        packet_write(conn_fd_, err_same_name, EXCEPTION);
     }
 }
 

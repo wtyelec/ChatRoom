@@ -26,8 +26,6 @@ void get_ip_config();
 void heartbeat_cli(int alarm_sec, int max_probes);
 void sig_alrm(int signo);
 int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_);
-//int16_t packet_write(int16_t write_fd_, const char* body_, int16_t body_size_);
-int16_t packet_read(int16_t read_fd_, char* &buf_send);
 
 char        addrs_buf[15];
 char        buf_recv[READ_BUF_SIZE];
@@ -61,7 +59,7 @@ int main(int argc, char* argv[])
 	memset(buf_recv, 0, sizeof(buf_recv));
 	get_ip_local();
 	client_socket();	
-    input_chat_name();
+    //input_chat_name();
 	//heartbeat_cli(5, 2);
 	
 	while(1)
@@ -99,15 +97,28 @@ void client_socket()
 	inet_pton(AF_INET, addrs_buf, &ser.sin_addr);
 	serv_fd = socket(AF_INET, SOCK_STREAM, 0);	
 	connect(serv_fd, (struct sockaddr *)&ser, sizeof(ser));   
-    /*
+    packet_type type;
+
 	do{
-		memset(name_feedback, 0, sizeof(name_feedback));
 		input_chat_name();
-		write(serv_fd, name.data(), sizeof(name.data())); 
-		read(serv_fd, name_feedback, sizeof(name_feedback));
-		cout << name_feedback << endl;
-	}while(name_feedback[0] !=  'p');
-    */
+        char buf_head[sizeof(net_packet_head)];
+        memset(buf_head, 0, sizeof(buf_head));
+        int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+        int16_t read_body_ret(0);
+        if(read_head_ret > 0)
+        {
+            net_packet packet;
+            packet.head = *(net_packet_head*)buf_head;
+            type = packet.head.m_packet_type;
+            char buf_body[packet.head.body_size];
+            memset(buf_body, 0, sizeof(buf_body));
+            read_body_ret = read(serv_fd, buf_body, packet.head.body_size);
+            if(read_body_ret > 0)
+            {
+                cout << buf_body << endl;
+            }
+        }
+    }while(type == EXCEPTION);
 }
 
 void input_chat_name()
@@ -125,34 +136,7 @@ void input_chat_name()
 			continue;
 		}
 	}
-    //write(serv_fd, name.data(), name.size());
     packet_write(serv_fd, name, NAME);
-}
-
-int16_t packet_read(int16_t read_fd_, char* &buf_read)
-{
-    // read net_packet_head
-	char buf_head[sizeof(net_packet_head)];
-	memset(buf_head, 0, sizeof(buf_head));
-	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0); 
-	if(read_head_ret > 0)
-	{
-        net_packet packet;
-        packet.head = *(net_packet_head*)buf_head;
-        // read net_packet_body
-        int16_t read_body_ret = read(serv_fd, buf_read, packet.head.body_size);
-
-        return read_body_ret;
-    }
-    if(read_head_ret <= 0 || read_body_ret <=0)
-    {
-        cout << "disconnect with server" << endl;
-        close(serv_fd);
-        exit(0);
-    }
-
-    return read_head_ret;
 }
 
 int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_)
@@ -168,11 +152,38 @@ int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_)
 
 void *recv_ser(void *arg)
 {
-    char* buf_read;
-    packet_read(serv_fd, buf_read);
-    cout << buf_read << endl;
-    pthread_create(&tid[0], &attr, recv_ser, NULL);
-	pthread_exit((void *)0);
+	char buf_head[sizeof(net_packet_head)];
+	memset(buf_head, 0, sizeof(buf_head));
+	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+    int16_t read_body_ret(0);
+	if(read_head_ret > 0)
+	{
+        pthread_mutex_lock(&mutex);
+        net_packet packet;
+        packet.head = *(net_packet_head*)buf_head;
+        // read net_packet_body
+        char buf_body[packet.head.body_size];
+        memset(buf_body, 0, sizeof(buf_body));
+        read_body_ret = read(serv_fd, buf_body, packet.head.body_size);
+        if(read_body_ret > 0)
+        {
+            if(buf_body[0] != '\0')
+            {
+                cout << buf_body << ". recv_count = " << recv_count++ << endl;
+            }
+            buf_body[0] = '\0'; 
+            pthread_mutex_unlock(&mutex);
+            pthread_create(&tid[0], &attr, recv_ser, NULL);
+        }
+    }
+
+    if(read_head_ret <= 0 || read_body_ret <=0)
+    {
+        cout << "disconnect with server" << endl;
+        close(serv_fd);
+        exit(0);
+    }
+    pthread_exit((void *)0);
 }
 
 void *input_msg(void *arg)
@@ -203,23 +214,7 @@ void *input_msg(void *arg)
 		}
 		else
 		{
-            /*
-            net_packet_body packet_body;
-            strcpy(packet_body.receiver, "all");
-            //packet_body.receiver= "all";
-            //unsigned char[] test_byte = System.Text.Encoding.Default.GetBytes("all");
-            //packet_body.receiver = test_byte; 
-            //packet_body.message = buf_send.data();
-            packet_body.recv_id = 3;
-            cout << "recv_if:" << packet_body.recv_id << endl;
-            cout << "receiver:" << packet_body.receiver << endl;
-            cout << "message:" << packet_body.message << endl;
-            char write_buf[sizeof("all") + buf_send.size() + 1];
-            memset(write_buf, 0, sizeof(write_buf));
-            memcpy(write_buf, &packet_body, sizeof(packet_body));
-            */
             int16_t write_ret = packet_write(serv_fd, buf_send, ALL);
-            //cout << "write_ret = " << write_ret << endl;
 			break;
 		}
 	}
