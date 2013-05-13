@@ -17,13 +17,13 @@ enum packet_type
 
 struct net_packet_head
 {
-    int16_t     body_size;
+    int  body_size;
     packet_type m_packet_type;
 };
 
 struct net_packet_body
 {
-    int16_t         recv_id;
+    int  recv_id;
     char receiver[4];
     char message[20];
 };

@@ -85,8 +85,8 @@ void recv_ser()
     // read net_packet_head
 	char buf_head[sizeof(net_packet_head)];
 	memset(buf_head, 0, sizeof(buf_head));
-	int16_t read_head_ret = read(sClient[0], buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0);
+	int read_head_ret = read(sClient[0], buf_head, sizeof(buf_head));
+    int read_body_ret(0);
 	if(read_head_ret > 0)
 	{
         net_packet packet;

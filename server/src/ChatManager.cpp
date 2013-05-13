@@ -3,22 +3,22 @@
 
 using namespace std;
 
-void static recv_usr_name(int16_t conn_fd_, const char* name_);
-void static clear_conn_fd(int16_t conn_fd_);
-int16_t static packet_write(int16_t write_fd_, string& body_, packet_type type_);
+void static recv_usr_name(int conn_fd_, const char* name_);
+void static clear_conn_fd(int conn_fd_);
+int static packet_write(int write_fd_, string& body_, packet_type type_);
 
 #define READ_BUF_SIZE 1024
 #define WRITE_BUF_SIZE 1024
 
-int16_t read_count(0);
+int read_count(0);
 
-void chat_manager_t::send_message(int16_t conn_fd_)
+void chat_manager_t::send_message(int conn_fd_)
 {
     // read net_packet_head
     char buf_head[sizeof(net_packet_head)];
     memset(buf_head, 0, sizeof(buf_head));
-    int16_t read_head_ret = read(conn_fd_, buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0);
+    int read_head_ret = read(conn_fd_, buf_head, sizeof(buf_head));
+    int read_body_ret(0);
     if(read_head_ret > 0)
     {
         net_packet read_packet;
@@ -54,9 +54,9 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                 {
                     sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
                     cout << sender << "count: " << read_count++ << endl; 
-                    map<int16_t,string> tmp(g_sock_name);
+                    map<int,string> tmp(g_sock_name);
                     tmp.erase(conn_fd_);    // remove sender fd   
-                    for(map<int16_t,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
+                    for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
                     {
                         packet_write((*it).first, sender, ALL);
                     }
@@ -70,7 +70,7 @@ void chat_manager_t::send_message(int16_t conn_fd_)
                 {
                     sender = sender + ": " + (msg_ptr + 1) + "(private)"; 
                     cout << sender << endl; 
-                    int16_t write_fd = (*g_name_sock.find(receiver)).second;
+                    int write_fd = (*g_name_sock.find(receiver)).second;
                     if(write_fd != 0)
                     {
                         packet_write(write_fd, sender, PRIVATE);
@@ -92,18 +92,18 @@ void chat_manager_t::send_message(int16_t conn_fd_)
     }
 }
 
-int16_t static packet_write(int16_t write_fd_, string& body_, packet_type type_)
+int static packet_write(int write_fd_, string& body_, packet_type type_)
 {
     net_packet write_packet;
     write_packet.head.body_size = body_.size() + 1;
     write_packet.head.m_packet_type = type_;
     write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
-    int16_t body_ret = write(write_fd_, body_.data(), body_.size() + 1);
+    int body_ret = write(write_fd_, body_.data(), body_.size() + 1);
 
     return body_ret;
 }
 
-void static recv_usr_name(int16_t conn_fd_, const char* name_)
+void static recv_usr_name(int conn_fd_, const char* name_)
 {
     if(g_name_sock.find(name_) == g_name_sock.end())
     {
@@ -120,7 +120,7 @@ void static recv_usr_name(int16_t conn_fd_, const char* name_)
     }
 }
 
-void static clear_conn_fd(int16_t conn_fd_)
+void static clear_conn_fd(int conn_fd_)
 {
 	g_sock_name.erase(conn_fd_);
 	close(conn_fd_);

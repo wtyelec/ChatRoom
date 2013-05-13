@@ -9,7 +9,7 @@ using namespace std;
 class sock_info_t
 {
 	private:
-		int16_t		m_listen_fd;
+		int		    m_listen_fd;
 		socklen_t   m_len;
 		struct sockaddr_in m_serv_addr;
 		struct sockaddr_in m_cli_addr;
@@ -20,7 +20,7 @@ class sock_info_t
 			m_len = 0;
 		};
 
-		inline int16_t get_ser_sock()
+		inline int get_ser_sock()
 		{
 			return m_listen_fd;
 		}
@@ -31,7 +31,7 @@ class sock_info_t
 		}
 
 		virtual void init();   
-		virtual int16_t accept_cli();
+		virtual int accept_cli();
 };
 
 #endif

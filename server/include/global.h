@@ -8,10 +8,10 @@
 #include <time.h>
 
 extern sock_info_t          g_sock_info;
-extern map<string,int16_t>	g_name_sock;
-extern map<int16_t,string>	g_sock_name;
+extern map<string,int>	g_name_sock;
+extern map<int,string>	g_sock_name;
 extern fd_set               g_all_set;
-extern int16_t              g_max_fd;
+extern int              g_max_fd;
 
 class log
 {
@@ -35,13 +35,13 @@ enum packet_type
 
 struct net_packet_head
 {
-    int16_t     body_size;
+    int     body_size;
     packet_type m_packet_type;
 };
 
 struct net_packet_body
 {
-    int16_t     recv_id;
+    int     recv_id;
     char        receiver[4];
     char        message[20];
 };

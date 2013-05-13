@@ -25,7 +25,7 @@ void get_ip_local();
 void get_ip_config();
 void heartbeat_cli(int alarm_sec, int max_probes);
 void sig_alrm(int signo);
-int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_);
+int packet_write(int write_fd_, string& body_, packet_type type_);
 
 char        addrs_buf[15];
 char        buf_recv[READ_BUF_SIZE];
@@ -103,8 +103,8 @@ void client_socket()
 		input_chat_name();
         char buf_head[sizeof(net_packet_head)];
         memset(buf_head, 0, sizeof(buf_head));
-        int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
-        int16_t read_body_ret(0);
+        int read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+        int read_body_ret(0);
         if(read_head_ret > 0)
         {
             net_packet packet;
@@ -139,13 +139,13 @@ void input_chat_name()
     packet_write(serv_fd, name, NAME);
 }
 
-int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_)
+int packet_write(int write_fd_, string& body_, packet_type type_)
 {
     net_packet write_packet;
     write_packet.head.body_size = body_.size() + 1;
     write_packet.head.m_packet_type = type_;
     write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
-    int16_t write_ret = write(write_fd_, body_.data(), body_.size() + 1);
+    int write_ret = write(write_fd_, body_.data(), body_.size() + 1);
 
     return write_ret;
 }
@@ -154,8 +154,8 @@ void *recv_ser(void *arg)
 {
 	char buf_head[sizeof(net_packet_head)];
 	memset(buf_head, 0, sizeof(buf_head));
-	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0);
+	int read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+    int read_body_ret(0);
 	if(read_head_ret > 0)
 	{
         pthread_mutex_lock(&mutex);
@@ -214,7 +214,7 @@ void *input_msg(void *arg)
 		}
 		else
 		{
-            int16_t write_ret = packet_write(serv_fd, buf_send, ALL);
+            int write_ret = packet_write(serv_fd, buf_send, ALL);
 			break;
 		}
 	}

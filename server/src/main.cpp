@@ -6,10 +6,10 @@
 using namespace std;
 
 sock_info_t         	g_sock_info;
-map<string,int16_t>     g_name_sock;
-map<int16_t,string>     g_sock_name;
+map<string,int>     g_name_sock;
+map<int,string>     g_sock_name;
 fd_set              	g_all_set;
-int16_t                 g_max_fd(0);
+int                 g_max_fd(0);
 
 int main(int argc, char* argv[])
 {
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 			default:
 				if(g_sock_name.size() > 0)
 				{
-					for(map<int16_t,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
+					for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
 					{
 						if(FD_ISSET((*it).first, &cur_set))
 						{

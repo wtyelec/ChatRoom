@@ -27,9 +27,9 @@ void get_ip_local();
 void get_ip_config();
 void heartbeat_cli(int alarm_sec, int max_probes);
 void sig_alrm(int signo);
-int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_);
-//int16_t packet_write(int16_t write_fd_, const char* body_, int16_t body_size_);
-int16_t packet_read(int16_t read_fd_, char* &buf_send);
+int packet_write(int write_fd_, string& body_, packet_type type_);
+//int packet_write(int write_fd_, const char* body_, int16_t body_size_);
+int packet_read(int read_fd_, char* &buf_send);
 
 char        addrs_buf[15];
 char        buf_recv[READ_BUF_SIZE];
@@ -117,19 +117,19 @@ void input_chat_name()
     packet_write(serv_fd, name, NAME);
 }
 
-int16_t packet_read(int16_t read_fd_, char* &buf_read)
+int packet_read(int read_fd_, char* &buf_read)
 {
     // read net_packet_head
 	char buf_head[sizeof(net_packet_head)];
 	memset(buf_head, 0, sizeof(buf_head));
-	int16_t read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
-    int16_t read_body_ret(0); 
+	int read_head_ret = read(serv_fd, buf_head, sizeof(buf_head));
+    int read_body_ret(0); 
 	if(read_head_ret > 0)
 	{
         net_packet packet;
         packet.head = *(net_packet_head*)buf_head;
         // read net_packet_body
-        int16_t read_body_ret = read(serv_fd, buf_read, packet.head.body_size);
+        int read_body_ret = read(serv_fd, buf_read, packet.head.body_size);
 
         return read_body_ret;
     }
@@ -143,13 +143,13 @@ int16_t packet_read(int16_t read_fd_, char* &buf_read)
     return read_head_ret;
 }
 
-int16_t packet_write(int16_t write_fd_, string& body_, packet_type type_)
+int packet_write(int write_fd_, string& body_, packet_type type_)
 {
     net_packet write_packet;
     write_packet.head.body_size = body_.size() + 1;
     write_packet.head.m_packet_type = type_;
     write(write_fd_, (char*)&write_packet.head, sizeof(net_packet_head));
-    int16_t write_ret = write(write_fd_, body_.data(), body_.size() + 1);
+    int write_ret = write(write_fd_, body_.data(), body_.size() + 1);
 
     return write_ret;
 }
@@ -206,7 +206,7 @@ void *input_msg(void *arg)
             memset(write_buf, 0, sizeof(write_buf));
             memcpy(write_buf, &packet_body, sizeof(packet_body));
             */
-            int16_t write_ret = packet_write(serv_fd, buf_send, ALL);
+            int write_ret = packet_write(serv_fd, buf_send, ALL);
             //cout << "write_ret = " << write_ret << endl;
 			break;
 		}
