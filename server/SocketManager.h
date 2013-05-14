@@ -20,7 +20,7 @@ class sock_info_t
 			m_len = 0;
 		};
 
-		inline int get_ser_sock()
+		inline int get_serv_sock()
 		{
 			return m_listen_fd;
 		}
