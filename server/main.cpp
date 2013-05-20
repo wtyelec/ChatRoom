@@ -2,7 +2,6 @@
 #include "SocketManager.h"
 #include "ChatManager.h"
 #include "global.h"
-//#include <event.h>
 
 using namespace std;
 
@@ -22,41 +21,9 @@ int main(int argc, char* argv[])
     event_init();      //libevent: event_init
 
 	g_sock_info.init();
-    //event_set(g_serv_ev, g_sock_info.get_serv_sock(), EV_READ | EV_PERSIST, serv_accept, NULL);
-	g_max_fd = g_sock_info.get_serv_sock();
-	ticks.tv_sec = 5;
-	ticks.tv_usec = 0;
-	FD_ZERO(&g_all_set);
-	FD_SET(g_sock_info.get_serv_sock(), &g_all_set); 
-
-	while(1)
-	{
-		cur_set = g_all_set;
-
-		switch(select(g_max_fd+1, &cur_set, NULL, NULL, &ticks))
-		{
-			case -1:
-				cout << "select error!" << endl;
-			    return 0;	
-			case 0:
-				break;
-			default:
-				if(g_sock_name.size() > 0)
-				{
-					for(map<int,string>::iterator it = g_sock_name.begin(); it != g_sock_name.end(); it++)
-					{
-						if(FD_ISSET((*it).first, &cur_set))
-						{
-							chat_manager.send_message((*it).first);
-						}
-					}
-				}
-				if(FD_ISSET(g_sock_info.get_serv_sock(), &cur_set))
-				{
-					g_sock_info.accept_cli();
-				}
-		}
-	}
+    event_set(&g_serv_ev, g_sock_info.get_serv_sock(), EV_READ | EV_PERSIST, chat_manager_t::accept_cli, NULL);
+    event_add(&g_serv_ev, 0);
+    event_dispatch();
 
 	return 0;
 }

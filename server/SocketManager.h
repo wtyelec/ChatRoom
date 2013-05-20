@@ -31,7 +31,6 @@ class sock_info_t
 		}
 
 		virtual void init();   
-		virtual int accept_cli();
 };
 
 #endif

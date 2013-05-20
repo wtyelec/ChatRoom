@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fcntl.h>
 #include "SocketManager.h"
 #include "global.h"
 
@@ -10,6 +11,17 @@ void sock_info_t::init()
 	m_serv_addr.sin_port = htons(6666);
 	m_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	m_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+    int flags;
+    //fcntl()用来操作文件描述符的一些特性
+    if ((flags = fcntl(m_listen_fd, F_GETFL)) == -1) {
+        return;
+    }
+
+    if (fcntl(m_listen_fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+        return;
+    }
+
 	int opt = 1;
 	setsockopt(m_listen_fd,SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if(bind(m_listen_fd, (struct sockaddr*)&m_serv_addr, sizeof(m_serv_addr)) == -1)
@@ -24,16 +36,4 @@ void sock_info_t::init()
     }
 	m_len = sizeof(m_cli_addr);
 	cout << "server init succeed" << endl;
-}
-
-int sock_info_t::accept_cli()
-{
-	int conn_fd = accept(m_listen_fd, (struct sockaddr *)&m_cli_addr, &m_len);
-	cout << "port:" << ntohs(get_cli().sin_port) << "; current connect fd = " << conn_fd << "; connected number = " << g_sock_name.size() + 1 << endl;
-	log::log_current_time();
-	g_sock_name[conn_fd] = "";
-	FD_SET(conn_fd, &g_all_set);
-	g_max_fd = g_max_fd < conn_fd ? conn_fd:g_max_fd;
-
-	return conn_fd;
 }

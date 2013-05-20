@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include "SocketManager.h"
+#include "global.h"
 
 using namespace std;
 
@@ -31,7 +32,11 @@ class user_info_t
 class chat_manager_t
 {
 	public:
-		virtual void send_message(int sid_);
+        static void send_message(int fd, short ev, void* arg);
+        static void accept_cli(int fd, short ev, void* arg);
+        static int packet_write(int write_fd_, string& body_, packet_type type_);
+        static void recv_usr_name(int conn_fd_, const char* name_);
+        static void clear_conn_fd(int conn_fd_);
 };
 
 #endif

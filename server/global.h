@@ -13,7 +13,7 @@ extern map<string,int>	g_name_sock;
 extern map<int,string>	g_sock_name;
 extern fd_set           g_all_set;
 extern int              g_max_fd;
-//extern event            g_serv_ev;
+extern event            g_serv_ev;
 
 class log
 {
