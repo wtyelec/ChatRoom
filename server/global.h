@@ -14,6 +14,8 @@ extern map<int,string>	g_sock_name;
 extern fd_set           g_all_set;
 extern int              g_max_fd;
 extern event            g_serv_ev;
+extern event            g_cli_ev;
+extern event_base*      g_ev_base;
 
 class log
 {

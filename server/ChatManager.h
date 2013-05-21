@@ -32,10 +32,12 @@ class user_info_t
 class chat_manager_t
 {
 	public:
-        static void send_message(int fd, short ev, void* arg);
+        static void on_read(int fd, short ev, void* arg);
+        static void on_write(int fd, short ev, void* arg);
+        static void on_recv_name(int fd, short ev, void* arg);
         static void accept_cli(int fd, short ev, void* arg);
         static int packet_write(int write_fd_, string& body_, packet_type type_);
-        static void recv_usr_name(int conn_fd_, const char* name_);
+        static int packet_write(int write_fd_, void* body_, packet_type type_);
         static void clear_conn_fd(int conn_fd_);
 };
 
