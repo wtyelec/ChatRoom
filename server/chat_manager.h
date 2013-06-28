@@ -4,7 +4,8 @@
 #include <string>
 #include <map>
 #include <set>
-#include "SocketManager.h"
+
+#include "socket_manager.h"
 #include "global.h"
 
 using namespace std;

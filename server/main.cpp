@@ -1,6 +1,6 @@
 #include <iostream>
-#include "SocketManager.h"
-#include "ChatManager.h"
+#include "socket_manager.h"
+#include "chat_manager.h"
 #include "global.h"
 
 using namespace std;
