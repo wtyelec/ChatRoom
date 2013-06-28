@@ -1,0 +1,4 @@
+1. mkdir objs
+2. install libevent
+3. make(to generate server)
+4. ./build.sh(to generate client)

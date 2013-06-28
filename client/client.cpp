@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -12,6 +13,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include "client.h"
+#include "signal.h"
 
 using namespace std;
 

@@ -1,7 +1,7 @@
 #include <iostream>
 #include "SocketManager.h"
 #include "ChatManager.h"
-#include "Global.h"
+#include "global.h"
 
 using namespace std;
 

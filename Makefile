@@ -1,4 +1,4 @@
-OBJS = main.o ChatManager.o SocketManager.o Log.o Util.o
+OBJS = main.o ChatManager.o SocketManager.o log.o util.o
 LIBEVENT = -Wl,-rpath,/usr/local/lib/ -L/usr/local/lib/ -levent -I/usr/local/include/
 CC = g++
 SRC_DIR = ./server/
@@ -16,16 +16,16 @@ server : main.o $(OBJS)
 main.o : main.cpp SocketManager.h ChatManager.h
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@ 
 
-SocketManager.o : SocketManager.cpp SocketManager.h Global.h 
+SocketManager.o : SocketManager.cpp SocketManager.h global.h 
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 	
-ChatManager.o : ChatManager.cpp ChatManager.h Global.h Util.h
+ChatManager.o : ChatManager.cpp ChatManager.h global.h util.h
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 
-Log.o : Log.cpp Log.h 
+log.o : log.cpp log.h 
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 
-Util.o : Util.cpp Util.h
+util.o : util.cpp util.h
 	$(CC) -c $< $(INCLUDE) -o $(OBJ_DIR)$@
 
 clean:

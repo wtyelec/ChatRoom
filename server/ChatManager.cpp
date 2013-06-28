@@ -1,7 +1,8 @@
-#include <sstream>
+#include <string.h>
+#include <stdlib.h>
 #include "ChatManager.h"
 #include "log.h"
-#include "Util.h"
+#include "util.h"
 
 using namespace std;
 
