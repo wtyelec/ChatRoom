@@ -1,7 +1,7 @@
 #include <iostream>
 #include "SocketManager.h"
 #include "ChatManager.h"
-#include "global.h"
+#include "Global.h"
 
 using namespace std;
 
@@ -22,7 +22,6 @@ int main(int argc, char* argv[])
 
 	g_sock_info.init();
     int serv_sock = g_sock_info.get_serv_sock();
-    //event_init();      //libevent: event_init
     g_ev_base = event_base_new(); 
     event_set(&g_serv_ev, serv_sock, EV_READ | EV_PERSIST, chat_manager_t::accept_cli, NULL);
     event_base_set(g_ev_base, &g_serv_ev);

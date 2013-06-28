@@ -17,17 +17,6 @@ extern event            g_serv_ev;
 extern event            g_cli_ev;
 extern event_base*      g_ev_base;
 
-class log
-{
-	public:
-		inline static void log_current_time()
-		{
-			time_t ticks;
-			time(&ticks);
-			cout << "time: " << ctime(&ticks);
-		}
-};
-
 enum packet_type 
 {
     NAME = 1,
@@ -39,15 +28,15 @@ enum packet_type
 
 struct net_packet_head
 {
-    int     body_size;
+    int         body_size;
     packet_type m_packet_type;
 };
 
 struct net_packet_body
 {
     int     recv_id;
-    char        receiver[4];
-    char        message[20];
+    char    receiver[4];
+    char    message[20];
 };
 
 struct net_packet

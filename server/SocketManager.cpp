@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include "SocketManager.h"
-#include "global.h"
+#include "Global.h"
 
 using namespace std;
 

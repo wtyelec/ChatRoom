@@ -1,4 +1,7 @@
+#include <sstream>
 #include "ChatManager.h"
+#include "log.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -20,23 +23,23 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
         net_packet read_packet;
         read_packet.head = *(net_packet_head*)buf_head;
         // read net_packet_body
-        char* buf_body = new char[read_packet.head.body_size];
+        char *buf_body = new char[read_packet.head.body_size];
         memset(buf_body, 0, sizeof(buf_body));
         read_body_ret = read(fd, buf_body, read_packet.head.body_size);
         if(read_body_ret > 0)
         {
             if(read_packet.head.m_packet_type == NAME)
             {
-                event* write_ev = (struct event*) malloc(sizeof(struct event));
-                event_set(write_ev, fd, EV_WRITE, on_recv_name, buf_body);
+                cout << "NAME = " << buf_body << endl;
+                event *write_ev = (struct event*) malloc(sizeof(struct event));
+                event_set(write_ev, fd, EV_WRITE, on_recv_name, (void*)buf_body);
                 event_base_set(g_ev_base, write_ev);
                 event_add(write_ev, NULL);
-                //recv_usr_name(fd, buf_body);
             }
             else
             {
                 char receiver[11];
-                char* msg_ptr;
+                char *msg_ptr;
                 msg_ptr = strchr(buf_body, ':');
                 if(msg_ptr == NULL)
                 {
@@ -49,7 +52,7 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                 strncpy(receiver, buf_body, msg_ptr - buf_body);
                 receiver[msg_ptr - buf_body] = '\0'; 
                 string sender = g_sock_name[fd];
-                delete buf_body;
+                delete [] buf_body;
                 if(read_packet.head.m_packet_type == ALL)
                 {
                     sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
@@ -86,7 +89,12 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                 */
             }
         }
+        else
+        {
+            delete [] buf_body;
+        }
     }
+
     if(read_head_ret <= 0 || read_body_ret <= 0)
     {
         cout << g_sock_name[fd] << " offline" << endl;
@@ -98,7 +106,7 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
 void chat_manager_t::on_write(int fd, short ev, void* arg)
 {
     cout << "on_write begin." << "fd = " << fd << endl;
-    char* buf = (char*)arg; 
+    char *buf = (char*)arg; 
     map<int, string> tmp(g_sock_name);
     tmp.erase(fd);    // remove sender fd (do not send to self)  
     for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
@@ -125,7 +133,7 @@ int chat_manager_t::packet_write(int fd, string& body_, packet_type type_)
 int chat_manager_t::packet_write(int fd, void* body_, packet_type type_)
 {
     cout << "packet_write begin." << "fd = " << fd << endl;
-    char* buf = (char*) body_;
+    char *buf = (char*) body_;
     net_packet write_packet;
     write_packet.head.body_size = strlen(buf);
     write_packet.head.m_packet_type = type_;
@@ -139,7 +147,8 @@ int chat_manager_t::packet_write(int fd, void* body_, packet_type type_)
 void chat_manager_t::on_recv_name(int fd, short ev, void* arg)
 {
     cout << "on_recv_name begin." << "fd = " << fd << endl;
-    char* name = (char*)arg; 
+    char *name = (char*)arg; 
+    cout << "name# = " << name << endl;
     if(g_name_sock.find(name) == g_name_sock.end())
     {
         g_sock_name[fd] = name;
@@ -153,6 +162,7 @@ void chat_manager_t::on_recv_name(int fd, short ev, void* arg)
         string err_same_name = "The name has used, please input another!";
         packet_write(fd, err_same_name, EXCEPTION);
     }
+    delete [] name;
     cout << "on_recv_name end." << "fd = " << fd << endl;
 }
 
@@ -167,18 +177,21 @@ void chat_manager_t::clear_conn_fd(int fd)
 
 void chat_manager_t::accept_cli(int fd, short ev, void* arg)
 {
-    cout << "accept_cli begin." << "fd = " << fd << endl;
+    string log_test = "accept_cli: fd = " + util::int_str(fd);
+    log::c_log(log_test + " begin");
+
     struct sockaddr_in  cli_addr;
     socklen_t cli_addr_len;
     cli_addr_len = sizeof(cli_addr);
     int cli_fd = accept(fd, (struct sockaddr *)&cli_addr, &cli_addr_len);
     cout << "port:" << ntohs(cli_addr.sin_port) << "; current connect fd = " << cli_fd << "; connected number = " << g_sock_name.size() + 1 << endl;
-    log::log_current_time();
+    //log::log_current_time();
     g_sock_name[cli_fd] = "";
 
-    event* read_ev = (struct event*)malloc(sizeof(struct event));
+    event *read_ev = (struct event*)malloc(sizeof(struct event));
     event_set(read_ev, cli_fd, EV_READ | EV_PERSIST, on_read, read_ev);
     event_base_set(g_ev_base, read_ev);
     event_add(read_ev, NULL);
-    cout << "accept_cli end." << "fd = " << fd << endl;
+
+    log::c_log(log_test + " end");
 }
