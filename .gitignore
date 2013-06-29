@@ -4,3 +4,4 @@ script
 *.o
 *.out
 *.txt
+tags

@@ -10,6 +10,7 @@ class util
 {
 public:
     static string int_str(int int_);
+    static char* localtime_str();
 };    
 
 #endif
