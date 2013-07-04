@@ -197,10 +197,8 @@ void chat_manager_t::accept_cli(int fd, short ev, void* arg)
     int cli_fd = accept(fd, (struct sockaddr *)&cli_addr,
             &cli_addr_len);
 
-    cout << "port:" << ntohs(cli_addr.sin_port)
-        << "; current connect fd = " << cli_fd
-        << "; connected number = " << g_sock_name.size() + 1
-        << endl;
+    log::cr_info("port:%d, fd:%d, num:%d", ntohs(cli_addr.sin_port), cli_fd, 
+            g_sock_name.size() + 1);
 
     g_sock_name[cli_fd] = "";
 

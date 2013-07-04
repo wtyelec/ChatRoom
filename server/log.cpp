@@ -15,14 +15,14 @@ void log::write_log(int severity, const char* msg)
         case _CR_LOG_DEBUG:
             severity_str = "debug";
             break;
-        case _CR_LOG_MSG:
-            severity_str = "msg";
+        case _CR_LOG_INFO:
+            severity_str = "info ";
             break;
         case _CR_LOG_WARN:
-            severity_str = "warn";
+            severity_str = "warn ";
             break;
-        case _CR_LOG_ERR:
-            severity_str = "err";
+        case _CR_LOG_ERROR:
+            severity_str = "error";
             break;
     }
 
@@ -60,12 +60,12 @@ void log::cr_debug(const char *fmt, ...)
     va_end(ap);
 }
 
-void log::cr_msg(const char *fmt, ...)
+void log::cr_info(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    cr_log(_CR_LOG_MSG, fmt, ap);
+    cr_log(_CR_LOG_INFO, fmt, ap);
 
     va_end(ap);
 }
@@ -80,14 +80,12 @@ void log::cr_warn(const char *fmt, ...)
     va_end(ap);
 }
 
-void log::cr_err(const char *fmt, ...)
+void log::cr_error(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
 
-    cr_log(_CR_LOG_ERR, fmt, ap);
+    cr_log(_CR_LOG_ERROR, fmt, ap);
 
     va_end(ap);
 }
-
-
