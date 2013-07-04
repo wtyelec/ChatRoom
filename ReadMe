@@ -1,8 +1,6 @@
-1. mkdir objs
-2. install libevent
-3. make(to generate server)
-4. ./build.sh(to generate client)
+1. install libevent
+2. make(to generate server)
+3. ./build.sh(to generate client)
 ----------------------------------------------------
 client
 1.input format -> all:message(chat to all)
-                  name:message(chat to someone)
