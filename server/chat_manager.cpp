@@ -14,9 +14,7 @@ int read_count(0);
 
 void chat_manager_t::on_read(int fd, short ev, void* arg)
 {
-    //string log_test = "on_read: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
-    log::cr_log("a = %d.", 1);
+    log::cr_debug("chat_manager_t.on_read(fd = %d) begin", fd);
 
     // read net_packet_head
     char buf_head[sizeof(net_packet_head)];
@@ -105,14 +103,12 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
         clear_conn_fd(fd);
     }
 
-    //log::c_log(log_test + " end");
+    log::cr_debug("chat_manager_t.on_read( fd = %d) end", fd);
 }
 
 void chat_manager_t::on_write(int fd, short ev, void* arg)
 {
-    //string log_test = "on_write: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
-
+    log::cr_debug("chat_manager_t.on_write(fd = %d) begin", fd);
     char *buf = (char*)arg; 
     map<int, string> tmp(g_sock_name);
     tmp.erase(fd);    // remove sender fd (do not send to self)  
@@ -122,15 +118,14 @@ void chat_manager_t::on_write(int fd, short ev, void* arg)
         packet_write((*it).first, buf, ALL);
     }
     delete buf;
-
-    //log::c_log(log_test + " end");
+    
+    log::cr_debug("chat_manager_t.on_write(fd = %d) end", fd);
 }
 
 int chat_manager_t::packet_write(int fd, string& body_,
         packet_type type_)
 {
-    string log_test = "packet_write: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
+    log::cr_debug("chat_manager_t.packet_write(fd = %d) begin", fd);
 
     net_packet write_packet;
     write_packet.head.body_size = body_.size() + 1;
@@ -138,15 +133,14 @@ int chat_manager_t::packet_write(int fd, string& body_,
     write(fd, (char*)&write_packet.head, sizeof(net_packet_head));
     int body_ret = write(fd, body_.data(), body_.size() + 1);
 
-    //log::c_log(log_test + " end");
+    log::cr_debug("chat_manager_t.packet_write(fd = %d) end", fd);
     return body_ret;
 }
 
 int chat_manager_t::packet_write(int fd, void* body_, 
         packet_type type_)
 {
-    //string log_test = "packet_write: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
+    log::cr_debug("chat_manager_t.packet_write(fd = %d) begin", fd);
 
     char *buf = (char*) body_;
     net_packet write_packet;
@@ -155,14 +149,13 @@ int chat_manager_t::packet_write(int fd, void* body_,
     write(fd, (char*)&write_packet.head, sizeof(net_packet_head));
     int body_ret = write(fd, buf, strlen(buf) + 1);
 
-    //log::c_log(log_test + " end");
+    log::cr_debug("chat_manager_t.packet_write(fd = %d) end", fd);
     return body_ret;
 }
 
 void chat_manager_t::on_recv_name(int fd, short ev, void* arg)
 {
-    //string log_test = "on_recv_name: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
+    log::cr_debug("chat_manager_t.on_recv_name(fd = %d) begin", fd);
 
     char *name = (char*)arg; 
     if(g_name_sock.find(name) == g_name_sock.end())
@@ -180,25 +173,23 @@ void chat_manager_t::on_recv_name(int fd, short ev, void* arg)
     }
     delete [] name;
 
-    //log::c_log(log_test + " end");
+    log::cr_debug("chat_manager_t.on_recv_name(fd = %d) end", fd);
 }
 
 void chat_manager_t::clear_conn_fd(int fd)
 {
-    //string log_test = "clear_conn_fd: fd = " + util::int_str(fd);
-    //log::c_log(log_test + " begin");
+    log::cr_debug("chat_manager_t.clear_conn_fd(fd = %d) begin", fd);
 
 	g_sock_name.erase(fd);
 	close(fd);
 	FD_CLR(fd, &g_all_set);
-
-    //log::c_log(log_test + " end");
+    
+    log::cr_debug("chat_manager_t.clear_conn_fd(fd = %d) end", fd);
 }
 
 void chat_manager_t::accept_cli(int fd, short ev, void* arg)
 {
-    string log_test = "accept_cli: fd = " + util::int_str(fd);
-    log::c_log(log_test + " begin");
+    log::cr_debug("chat_manager_t.accept_cli(fd = %d) begin", fd);
 
     struct sockaddr_in  cli_addr;
     socklen_t cli_addr_len;
@@ -219,5 +210,5 @@ void chat_manager_t::accept_cli(int fd, short ev, void* arg)
     event_base_set(g_ev_base, read_ev);
     event_add(read_ev, NULL);
 
-    log::c_log(log_test + " end");
+    log::cr_debug("chat_manager_t.accept_cli(fd = %d) end", fd);
 }

@@ -6,35 +6,35 @@
 
 using namespace std;
 
-void log::c_log(const char* msg)
+void log::write_log(int severity, const char* msg)
 {
-    cout << "1 log begin" << endl;
-    cout << msg << endl;
+    const char *severity_str;
+
+    switch (severity)
+    {
+        case _CR_LOG_DEBUG:
+            severity_str = "debug";
+            break;
+        case _CR_LOG_MSG:
+            severity_str = "msg";
+            break;
+        case _CR_LOG_WARN:
+            severity_str = "warn";
+            break;
+        case _CR_LOG_ERR:
+            severity_str = "err";
+            break;
+    }
+
     const char file_name[] = "mylog.txt";
     ofstream fs;
     fs.open(file_name, ios::app);
-    fs << "[" << util::localtime_str() << "] " << msg << endl;
+    fs << "[" << severity_str << "]"<< "[" << util::localtime_str() << "] " << msg << endl;
     fs.close();
-    cout << "1 log end" << endl;
 }
 
-void log::c_log(const string &msg)
+void log::cr_log(int severity, const char *fmt, va_list ap)
 {
-    cout << "2 log begin" << endl;
-    cout << msg << endl;
-    const char file_name[] = "mylog.txt";
-    ofstream fs;
-    fs.open(file_name, ios::app);
-    fs << "[" << util::localtime_str() << "] " << msg << endl;
-    fs.close();
-    cout << "2 log end" << endl;
-}
-
-void log::cr_log(const char *fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-
     char buf[1024];
     size_t len;
     if(fmt != NULL)
@@ -47,9 +47,47 @@ void log::cr_log(const char *fmt, ...)
     {
         buf[0] = '\0';
     }
-    cout << buf << endl;
-    c_log(buf);
+    write_log(severity, buf);
+}
 
+void log::cr_debug(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    cr_log(_CR_LOG_DEBUG, fmt, ap);
 
     va_end(ap);
 }
+
+void log::cr_msg(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    cr_log(_CR_LOG_MSG, fmt, ap);
+
+    va_end(ap);
+}
+
+void log::cr_warn(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    cr_log(_CR_LOG_WARN, fmt, ap);
+
+    va_end(ap);
+}
+
+void log::cr_err(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    cr_log(_CR_LOG_ERR, fmt, ap);
+
+    va_end(ap);
+}
+
+
