@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
-#include <stdarg.h>
+#include <stdarg.h>         // va_list
+#include <sys/stat.h>       // mkdir
 #include "log.h"
 #include "util.h"
 
@@ -13,20 +14,21 @@ void log::write_log(int severity, const char* msg)
     switch (severity)
     {
         case _CR_LOG_DEBUG:
-            severity_str = "debug";
+            severity_str = "Debug";
             break;
         case _CR_LOG_INFO:
-            severity_str = "info ";
+            severity_str = "Info ";
             break;
         case _CR_LOG_WARN:
-            severity_str = "warn ";
+            severity_str = "Warn ";
             break;
         case _CR_LOG_ERROR:
-            severity_str = "error";
+            severity_str = "Error";
             break;
     }
 
-    const char file_name[] = "mylog.txt";
+    mkdir("log", 0755);
+    const char file_name[] = "log/mylog.txt";
     ofstream fs;
     fs.open(file_name, ios::app);
     fs << "[" << severity_str << "]"<< "[" << util::localtime_str() << "] " << msg << endl;
