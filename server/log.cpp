@@ -27,11 +27,12 @@ void log::write_log(int severity, const char* msg)
             break;
     }
 
-    mkdir("log", 0755);
-    const char file_name[] = "log/mylog.txt";
+    mkdir("Log", 0755);
+    string dir = "Log/" + util::get_cur_time();
+    const char *file_name = dir.data(); 
     ofstream fs;
     fs.open(file_name, ios::app);
-    fs << "[" << severity_str << "]"<< "[" << util::localtime_str() << "] " << msg << endl;
+    fs << "[" << severity_str << "]"<< "[" << util::get_cur_sec() << "] " << msg << endl;
     fs.close();
 }
 
