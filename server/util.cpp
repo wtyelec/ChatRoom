@@ -1,13 +1,16 @@
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include "util.h"
 
+using namespace std;
+
 string util::int_str(int int_)
 {
     string str;
-    ostringstream oss;
-    oss << int_;
-    str = oss.str();
+    char buf[10];
+    sprintf(buf, "%d", int_);
+    str = buf;
 
     return str;
 }
@@ -47,6 +50,9 @@ string util::get_cur_time()
 string util::get_cur_sec()
 {
     tm* p = get_local_time();
+    string hour = p->tm_hour > 9 ? int_str(p->tm_hour) : ("0" + int_str(p->tm_hour)); 
+    string min = p->tm_min > 9 ? int_str(p->tm_min) : ("0" + int_str(p->tm_min)); 
+    string sec = p->tm_sec > 9 ? int_str(p->tm_sec) : ("0" + int_str(p->tm_sec)); 
 
-    return int_str(p->tm_hour) + ":" + int_str(p->tm_min) + ":" + int_str(p->tm_sec);
+    return hour + ":" + min + ":" + sec;
 }

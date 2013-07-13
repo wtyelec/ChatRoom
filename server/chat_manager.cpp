@@ -57,8 +57,9 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                 delete [] buf_body;
                 if(read_packet.head.m_packet_type == ALL)
                 {
-                    sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)";
+                    sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)" + util::int_str(++read_count);
                     cout << sender << endl;
+                    log::cr_info(sender.data());
                     map<int, string> tmp(g_sock_name);
                     tmp.erase(fd);    // remove sender fd (do not send to self)  
                     for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
@@ -197,7 +198,7 @@ void chat_manager_t::accept_cli(int fd, short ev, void* arg)
     int cli_fd = accept(fd, (struct sockaddr *)&cli_addr,
             &cli_addr_len);
 
-    log::cr_info("port:%d, fd:%d, num:%d", ntohs(cli_addr.sin_port), cli_fd, 
+    log::cr_info("chat_manager_t.accept_cli(port = %d, fd = %d, num = %d)", ntohs(cli_addr.sin_port), cli_fd, 
             g_sock_name.size() + 1);
 
     g_sock_name[cli_fd] = "";
