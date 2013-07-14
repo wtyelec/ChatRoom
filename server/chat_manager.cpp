@@ -54,9 +54,9 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                 strncpy(receiver, buf_body, msg_ptr - buf_body);
                 receiver[msg_ptr - buf_body] = '\0'; 
                 string sender = g_sock_name[fd];
-                delete [] buf_body;
                 if(read_packet.head.m_packet_type == ALL)
                 {
+                    cout << "buf_body = " << msg_ptr + 1<< endl;
                     sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)" + util::int_str(++read_count);
                     cout << sender << endl;
                     log::cr_info(sender.data());
@@ -67,6 +67,7 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                         packet_write((*it).first, sender, ALL);
                     }
                 }
+                delete [] buf_body;
                 /*
                 else if(read_packet.head.m_packet_type == HEART)
                 {

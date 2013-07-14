@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 	memset(buf_recv, 0, sizeof(buf_recv));
 	get_ip_local();
 	client_socket();	
-    for(int i = 0; i < 100; i++)
+    for(int i = 0; i < 20; i++)
     {
         string test = "all:fasdf"; 
         packet_write(serv_fd, test, ALL);
