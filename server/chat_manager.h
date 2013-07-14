@@ -35,7 +35,7 @@ class chat_manager_t
 	public:
         static void on_read(int fd, short ev, void* arg);
         static void on_write(int fd, short ev, void* arg);
-        static void on_recv_name(int fd, short ev, void* arg);
+        static void on_recv_name(int fd, char* name);
         static void accept_cli(int fd, short ev, void* arg);
         static int packet_write(int write_fd_, string& body_, packet_type type_);
         static int packet_write(int write_fd_, void* body_, packet_type type_);

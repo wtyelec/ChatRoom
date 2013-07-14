@@ -7,9 +7,9 @@
 using namespace std;
 
 sock_info_t         g_sock_info;
-map<string,int>     g_name_sock;
-map<int,string>     g_sock_name;
-fd_set              g_all_set;
+map<string,int>     g_name_fd;
+map<int, fd_info>   g_fd_info;
+//fd_set              g_all_set;
 int                 g_max_fd(0);
 event               g_serv_ev;
 event               g_cli_ev;
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 {
 	struct timeval      ticks;
 	chat_manager_t      chat_manager;
-	fd_set              cur_set;
+	//fd_set              cur_set;
 
 	g_sock_info.init();
     int serv_sock = g_sock_info.get_serv_sock();

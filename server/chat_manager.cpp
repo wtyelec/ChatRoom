@@ -33,10 +33,7 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
         {
             if(read_packet.head.m_packet_type == NAME)
             {
-                event *write_ev = (struct event*) malloc(sizeof(struct event));
-                event_set(write_ev, fd, EV_WRITE, on_recv_name, (void*)buf_body);
-                event_base_set(g_ev_base, write_ev);
-                event_add(write_ev, NULL);
+                on_recv_name(fd, buf_body);
             }
             else
             {
@@ -53,16 +50,15 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
                 // analysis data
                 strncpy(receiver, buf_body, msg_ptr - buf_body);
                 receiver[msg_ptr - buf_body] = '\0'; 
-                string sender = g_sock_name[fd];
+                string sender = g_fd_info[fd].name;
                 if(read_packet.head.m_packet_type == ALL)
                 {
-                    cout << "buf_body = " << msg_ptr + 1<< endl;
                     sender = sender + ": " + (msg_ptr + 1) + " (in a chat room)" + util::int_str(++read_count);
                     cout << sender << endl;
                     log::cr_info(sender.data());
-                    map<int, string> tmp(g_sock_name);
+                    map<int, fd_info> tmp(g_fd_info);
                     tmp.erase(fd);    // remove sender fd (do not send to self)  
-                    for(map<int,string>::iterator it = tmp.begin(); it != tmp.end(); it++)
+                    for(map<int,fd_info>::iterator it = tmp.begin(); it != tmp.end(); it++)
                     {
                         packet_write((*it).first, sender, ALL);
                     }
@@ -100,9 +96,11 @@ void chat_manager_t::on_read(int fd, short ev, void* arg)
 
     if(read_head_ret <= 0 || read_body_ret <= 0)
     {
-        cout << g_sock_name[fd] << " offline" << endl;
-        g_name_sock.erase(g_sock_name[fd]);
-        clear_conn_fd(fd);
+        cout << g_fd_info[fd].name << " offline" << endl;
+        g_name_fd.erase(g_fd_info[fd].name);
+        event_del(g_fd_info[fd].ev);
+        g_fd_info.erase(fd);
+        close(fd);
     }
 
     log::cr_debug("chat_manager_t.on_read( fd = %d) end", fd);
@@ -112,9 +110,9 @@ void chat_manager_t::on_write(int fd, short ev, void* arg)
 {
     log::cr_debug("chat_manager_t.on_write(fd = %d) begin", fd);
     char *buf = (char*)arg; 
-    map<int, string> tmp(g_sock_name);
+    map<int, fd_info> tmp(g_fd_info);
     tmp.erase(fd);    // remove sender fd (do not send to self)  
-    for(map<int,string>::iterator it = tmp.begin();
+    for(map<int,fd_info>::iterator it = tmp.begin();
             it != tmp.end(); it++)
     {
         packet_write((*it).first, buf, ALL);
@@ -155,18 +153,18 @@ int chat_manager_t::packet_write(int fd, void* body_,
     return body_ret;
 }
 
-void chat_manager_t::on_recv_name(int fd, short ev, void* arg)
+void chat_manager_t::on_recv_name(int fd, char* name)
 {
     log::cr_debug("chat_manager_t.on_recv_name(fd = %d) begin", fd);
 
-    char *name = (char*)arg; 
-    if(g_name_sock.find(name) == g_name_sock.end())
+    if(g_name_fd.find(name) == g_name_fd.end())
     {
-        g_sock_name[fd] = name;
-        g_name_sock[name] = fd;
+        g_fd_info[fd].name = name;
+        g_name_fd[name] = fd;
         string msg = "Please start to chat!";
         packet_write(fd, msg, ALL);
-        cout << g_sock_name[fd] << " enter chat room" << endl;
+        cout << g_fd_info[fd].name << " enter chatroom" << endl;
+        log::cr_info("chat_manager_t.on_recv_name(): %s enter chatroom.", g_fd_info[fd].name.data());
     }
     else
     {
@@ -182,9 +180,8 @@ void chat_manager_t::clear_conn_fd(int fd)
 {
     log::cr_debug("chat_manager_t.clear_conn_fd(fd = %d) begin", fd);
 
-	g_sock_name.erase(fd);
+	g_fd_info.erase(fd);
 	close(fd);
-	FD_CLR(fd, &g_all_set);
     
     log::cr_debug("chat_manager_t.clear_conn_fd(fd = %d) end", fd);
 }
@@ -199,16 +196,17 @@ void chat_manager_t::accept_cli(int fd, short ev, void* arg)
     int cli_fd = accept(fd, (struct sockaddr *)&cli_addr,
             &cli_addr_len);
 
-    log::cr_info("chat_manager_t.accept_cli(port = %d, fd = %d, num = %d)", ntohs(cli_addr.sin_port), cli_fd, 
-            g_sock_name.size() + 1);
+    log::cr_info("chat_manager_t.accept_cli(port = %d, cli_fd = %d, num = %d)", 
+            ntohs(cli_addr.sin_port), cli_fd, g_fd_info.size() + 1);
 
-    g_sock_name[cli_fd] = "";
+    g_fd_info[cli_fd].name = "";
 
     event *read_ev = (struct event*)malloc(sizeof(struct event));
     event_set(read_ev, cli_fd, EV_READ | EV_PERSIST, on_read,
             read_ev);
     event_base_set(g_ev_base, read_ev);
     event_add(read_ev, NULL);
+    g_fd_info[cli_fd].ev = read_ev;
 
     log::cr_debug("chat_manager_t.accept_cli(fd = %d) end", fd);
 }
