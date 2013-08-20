@@ -16,7 +16,6 @@ extern map<int,fd_info>	    g_fd_info;
 extern fd_set               g_all_set;
 extern int                  g_max_fd;
 extern event                g_serv_ev;
-extern event                g_cli_ev;
 extern event_base*          g_ev_base;
 
 enum packet_type 

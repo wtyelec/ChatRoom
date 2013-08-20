@@ -1,5 +1,5 @@
 OBJS = main.o chat_manager.o socket_manager.o log.o util.o
-LIBEVENT = -Wl,-rpath,/usr/local/lib/ -L/usr/local/lib/ -levent -I/usr/local/include/
+LIBEVENT = -Wl,-rpath,/usr/lib/ -L/usr/lib/ -levent -I/usr/include/
 CC = g++
 SRC_DIR = ./server/
 INC_DIR = ./server/

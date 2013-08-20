@@ -12,7 +12,6 @@ map<int, fd_info>   g_fd_info;
 //fd_set              g_all_set;
 int                 g_max_fd(0);
 event               g_serv_ev;
-event               g_cli_ev;
 event_base*         g_ev_base;
 
 int main(int argc, char* argv[])
@@ -23,7 +22,7 @@ int main(int argc, char* argv[])
 
 	g_sock_info.init();
     int serv_sock = g_sock_info.get_serv_sock();
-    g_ev_base = event_base_new(); 
+    g_ev_base = event_init(); 
     assert(g_ev_base != NULL);
     event_set(&g_serv_ev, serv_sock, EV_READ | EV_PERSIST, chat_manager_t::accept_cli, NULL);
     event_base_set(g_ev_base, &g_serv_ev);
